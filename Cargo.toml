@@ -1,0 +1,22 @@
+[package]
+name = "literature"
+version = "0.1.0"
+edition = "2021"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[dependencies]
+dioxus = "0.3"
+dioxus-desktop = "0.3.0"
+dioxus-sortable = "0.1.1"
+dioxus-web = "0.3.0"
+im-rc = "15.1.0"
+log = "0.4.20"
+pdf = "0.8.1"
+pollster = "0.3.0"
+regex = "1.10.2"
+reqwest = "0.11.22"
+resolve = "0.2.0"
+ron = "0.8.1"
+select = "0.6.0"
+serde = "1.0.189"
