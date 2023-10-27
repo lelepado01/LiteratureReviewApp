@@ -4,7 +4,6 @@ use dashboard::dashboard_data::DashboardData;
 use dioxus::prelude::*;
 use dioxus_desktop::{Config, WindowBuilder};
 
-mod tables;
 mod common;
 mod app_data;
 mod categories;
@@ -17,12 +16,12 @@ mod data;
 
 use app_data::AppPage; 
 use common::{create_navbar, create_header};
-use categories::categories::create_categories_page;
+use categories::render::create_categories_page;
 use global_search::global_search_data::GlobalSearchData;
 use memos::memos::create_memos_page;
-use dashboard::dashboard::create_dashboard_page;
-use global_search::global_search::create_global_search_page;
-use paper_search::paper_search::create_paper_search_page;
+use dashboard::render::create_dashboard_page;
+use global_search::render::create_global_search_page;
+use paper_search::render::create_paper_search_page;
 use paper_search::paper_search_data::PaperSearchData;
 
 fn main() {

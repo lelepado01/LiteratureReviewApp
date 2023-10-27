@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dioxus_sortable::{UseSorter, use_sorter};
 
-use crate::tables::categories::CategoriesTableField;
+use crate::categories::categories_table::CategoriesTableField;
 
 pub struct CategoriesData<'a> {
     pub search_query : &'a UseState<String>,

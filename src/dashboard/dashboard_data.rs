@@ -2,7 +2,7 @@
 use dioxus::prelude::*;
 use dioxus_sortable::{use_sorter, UseSorter};
 
-use crate::tables::dashboard::DashboardTableField;
+use crate::dashboard::dashboard_table::DashboardTableField;
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct DashboardData<'a> {

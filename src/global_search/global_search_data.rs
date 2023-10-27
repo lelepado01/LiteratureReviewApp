@@ -13,7 +13,7 @@ impl <'a> GlobalSearchData<'a> {
     pub fn new(cx: Scope<'a>) -> Self {
         Self {
             search_query: use_state(cx, || "".to_string()),
-            search_results: use_state(cx, || vec![]),
+            search_results: use_state(cx, || { Vec::new() }),
         }
     }
 }

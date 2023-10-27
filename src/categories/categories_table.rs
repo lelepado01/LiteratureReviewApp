@@ -1,6 +1,6 @@
 
 use dioxus::prelude::*;
-use dioxus_sortable::{use_sorter, PartialOrdBy, SortBy, Sortable, Th};
+use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 use serde::{Deserialize, Serialize};
 
 use crate::categories::categories_data::CategoriesData;

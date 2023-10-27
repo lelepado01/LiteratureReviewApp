@@ -1,5 +1,4 @@
-
-use crate::tables::categories::CategoriesTableRow;
+use crate::categories::categories_table::CategoriesTableRow;
 
 pub fn load_categories() -> Vec<CategoriesTableRow> {
     let file = std::fs::File::open("metadata/categories.ron").unwrap();

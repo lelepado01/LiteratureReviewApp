@@ -1,4 +1,3 @@
-use dioxus::prelude::*;
 
 #[derive(PartialEq)]
 pub enum AppPage {

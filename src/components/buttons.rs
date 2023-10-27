@@ -1,8 +1,8 @@
 
 use dioxus::prelude::*;
 
-use crate::tables::categories::CategoriesTableRow;
 use crate::data::loader::load_categories;
+use crate::categories::categories_table::CategoriesTableRow;
 
 pub fn create_button_open_pdf(cx: Scope, label : String, path: String) -> Element {
     cx.render(rsx! {

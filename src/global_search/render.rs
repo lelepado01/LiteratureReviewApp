@@ -1,7 +1,7 @@
 
 #![allow(non_snake_case)]
 use dioxus::prelude::*;
-use pdf::{file::{FileOptions}, object::{Page, NoResolve}, content::Op};
+use pdf::{file::FileOptions, object::{Page, NoResolve}, content::Op};
 
 use crate::components::buttons::create_button_open_pdf;
 use crate::components::padding::create_padding_block;
@@ -70,8 +70,8 @@ fn create_global_search_bar<'a>(cx: Scope<'a>, global_search_data : GlobalSearch
     ))
 }
 
-fn search_in_all_files(query : &String) -> Vec<GlobalSearchResult> {
-    let mut results = vec![];
+fn search_in_all_files(query : &str) -> Vec<GlobalSearchResult> {
+    let results = vec![];
 
     let all_pdfs = std::fs::read_dir("papers/").unwrap();
 
@@ -93,11 +93,8 @@ fn search_in_all_files(query : &String) -> Vec<GlobalSearchResult> {
                 println!("{}", mod_date.unwrap().unwrap());
             }
 
-            for page in file.pages(){
-                if page.is_ok(){
-                    let page = page.unwrap();
-                    parse_members_on_page(&page);
-                }
+            for page in file.pages().flatten() {
+                parse_members_on_page(&page);
             }
 
         }
