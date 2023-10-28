@@ -6,4 +6,6 @@ pub enum AppPage {
     Memos,
     GlobalSearch,
     PaperSearch, 
+    ExportBib,
+    ExportText,
 }

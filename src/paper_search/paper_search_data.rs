@@ -14,7 +14,7 @@ pub struct PaperSearchData<'a> {
 impl<'a> PaperSearchData<'a> {
     pub fn new(cx: Scope<'a>) -> Self { 
         let search_query: &UseState<String> = use_state(cx, || "".to_string());
-        let search_results: &UseState<Vec<PaperSearchResult>> = use_state(cx, || vec![]);
+        let search_results: &UseState<Vec<PaperSearchResult>> = use_state(cx, || {vec![]});
         let abstract_modal_data: &UseState<String> = use_state(cx, || "".to_string());
         let abstract_modal_hidden: &UseState<bool> = use_state(cx, || true);
     
