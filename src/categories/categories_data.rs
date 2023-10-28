@@ -18,3 +18,8 @@ impl <'a> CategoriesData<'a> {
         }
     }
 }
+
+struct CategoryTag {
+    label: String,
+    color: String,
+}

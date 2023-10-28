@@ -2,19 +2,19 @@
 use dioxus::prelude::*;
 use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 
-use crate::components::buttons::{create_button_open_pdf, create_button_add_category};
+use crate::components::buttons::create_button_open_pdf;
 use crate::common::create_search_bar;
 use crate::dashboard::dashboard_data::DashboardData;
-use crate::data::loader::{load_categories, load_unique_categories};
 use crate::data::updater::update_categories;
+use crate::data::loader::{load_papers, load_unique_categories, load_dashboard_table_rows};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq)]
 pub struct DashboardTableRow {
-    file_name: String,
-    author: String,
-    pages: u32,
-    categories: Vec<String>,
+    pub file_name: String,
+    pub author: String,
+    pub pages: u32,
+    pub categories: Vec<String>,
 }
 
 /// Our table columns. Type `F`. One for each field in Person.
@@ -53,53 +53,10 @@ impl Sortable for DashboardTableField {
     }
 }
 
-fn get_data(name :String) -> Vec<DashboardTableRow> {
-
-    update_categories();
-    
-    let data = load_categories();
-
-    let papers = std::fs::read_dir("./papers/").unwrap()
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, std::io::Error>>().unwrap();
-
-    let mut result = Vec::new();
-
-    for paper in papers.iter() {
-        let file_name = paper.file_name().unwrap().to_str().unwrap().to_string();
-        let author = "author".to_string(); // TODO: get author from pdf
-        let pages = 1; // TODO: get pages from pdf
-        let mut categories = Vec::new();
-
-        for row in data.iter() {
-            for path in row.paths.iter() {
-                if path == &file_name && !categories.contains(&row.category) {
-                    categories.push(row.category.clone());
-                }
-            }
-        }
-
-        if name.is_empty() 
-            || file_name.to_lowercase().contains(&name) 
-            || author.to_lowercase().contains(&name)
-            || categories.iter().any(|cat| cat.to_lowercase().contains(&name))
-            {
-            result.push(DashboardTableRow {
-                file_name,
-                author,
-                pages,
-                categories,
-            });
-        }
-    }
-
-    result
-}
-
-
 pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> Element<'a> {
 
-    let mut data = get_data(dashboard_data.search_query.get().to_owned());
+
+    let mut data = load_dashboard_table_rows(dashboard_data.search_query.get().to_owned());
     dashboard_data.sorter.sort(data.as_mut_slice());
 
     let categories = load_unique_categories();
@@ -153,6 +110,108 @@ fn create_category_tags(cx: Scope, categories : Vec<String>) -> Element {
             span {
                 class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800",
                 "{cat}"
+            }
+        }
+    })
+}
+
+
+
+pub fn create_button_add_category(cx: Scope, label : String, file_name: String, categories : Vec<String>) -> Element {
+
+    let hidden_box = use_state(cx, || true);
+    let category = use_state(cx, || "".to_string());
+    
+    cx.render(rsx! {
+        span {
+            class: "sm:ml-3",
+            div {
+                class: "relative inline-block text-left",
+                div {
+                    class: "inline-flex items-center overflow-hidden rounded-md border bg-white",
+                    button {
+                        "type": "button",
+                        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
+                        onclick: |_| {
+                            hidden_box.set(!hidden_box.get());
+                        },
+                        label.clone(),
+                    }
+                },
+                if *hidden_box.get() {
+                    None
+                } else {
+                    cx.render(rsx!{
+                        div {
+                            class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
+                            for cat in categories.iter() {
+                                create_category_option(cx, cat.to_string(), file_name.clone(), category)
+                            }
+                            hr{class: "border-t border-gray-100"}
+                            create_category_adder(cx, file_name.clone(), category)
+                        }  
+                    })              
+                }
+            }
+        }
+    })
+}
+
+fn create_category_option<'a>(cx: Scope<'a>, label : String, file_name: String, category_hook : &'a UseState<String>) -> Element<'a> {
+    
+    let unselected_style = "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100 hover:text-gray-900"; 
+    let selected_style = "block px-4 py-2 text-sm text-green-600 bg-gray-100";
+    
+    let papers = load_papers();
+    let mut found = false;
+    for paper in papers.iter() {
+        if paper.file_name == file_name {
+            for cat in paper.categories.iter() {
+                if cat == &label {
+                    found = true;
+                }
+            }
+        }
+    }
+
+    cx.render(rsx! {
+        a {
+            href: "#",
+            class: if found { selected_style } else { unselected_style },
+            onclick: move |_| {
+                update_categories(&file_name, &label);
+                category_hook.set("".to_string());
+            },
+            label.clone()
+        }
+    })
+}
+
+fn create_category_adder<'a>(cx: Scope<'a>, file_name: String, category_hook : &'a UseState<String>) -> Element<'a> {
+    cx.render(rsx! {
+        div {
+            class: "px-4 py-2",
+            div{
+                class: "flex",
+                input {
+                    "type": "text",
+                    class: "border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
+                    placeholder: "Add Category",
+                    value: category_hook.get().as_str(),
+                    oninput: move |e| {
+                        category_hook.set(e.value.clone());
+                    }
+                }
+                button {
+                    class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
+                    onclick: move |_| {
+                        let category = category_hook.get();
+                        update_categories(&file_name, category);
+
+                        category_hook.set("".to_string());
+                    },
+                    "Add"
+                }
             }
         }
     })

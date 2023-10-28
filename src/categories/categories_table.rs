@@ -46,6 +46,7 @@ impl Sortable for CategoriesTableField {
 
 pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) -> Element<'a> {
 
+
     let mut data = load_categories(); 
     data.retain(|row| row.category.to_lowercase().contains(categories_data.search_query.get()));
     categories_data.sorter.sort(data.as_mut_slice());

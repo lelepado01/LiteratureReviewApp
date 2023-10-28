@@ -1,3 +1,3 @@
 pub mod render;
 pub mod dashboard_data;
-mod dashboard_table;
+pub mod dashboard_table;

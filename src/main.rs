@@ -39,6 +39,7 @@ fn main() {
 }
 
 fn App(cx: Scope) -> Element {
+
     let page: &UseState<AppPage> = use_state(cx, || AppPage::Dashboard);
 
     let paper_search_data = PaperSearchData::new(cx);

@@ -12,16 +12,16 @@ use super::export_data::ExportData;
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct ExportPDFTableRow {
-    pub category: String,
-    pub paths: Vec<String>,
+    pub file_name: String,
+    pub categories: Vec<String>,
 }
 
 /// Our table columns. Type `F`. One for each field in Person.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum ExportPDFTableField {
     #[default]
-    Category,
     FileName,
+    Category,
     AddRemove,
 }
 
@@ -30,7 +30,7 @@ impl PartialOrdBy<ExportPDFTableRow> for ExportPDFTableField {
     fn partial_cmp_by(&self, a: &ExportPDFTableRow, b: &ExportPDFTableRow) -> Option<std::cmp::Ordering> {
         // Note how it's just a passthru to `PartialOrd` for each field.
         match self {
-            ExportPDFTableField::Category => a.category.partial_cmp(&b.category),
+            ExportPDFTableField::Category => a.categories.partial_cmp(&b.categories),
             ExportPDFTableField::FileName => Some(std::cmp::Ordering::Equal),
             ExportPDFTableField::AddRemove => Some(std::cmp::Ordering::Equal),
         }
@@ -47,8 +47,9 @@ impl Sortable for ExportPDFTableField {
 
 pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Element<'a> {
 
+
     let mut data = load_pdf_export_rows(); 
-    data.retain(|row| row.category.to_lowercase().contains(export_data.search_query.get()));
+    data.retain(|row| row.file_name.to_lowercase().contains(export_data.search_query.get()));
     export_data.sorter.sort(data.as_mut_slice());
 
     cx.render(rsx!{
@@ -69,12 +70,10 @@ pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Elemen
                     }
                     tbody {
                         for table_row in data.iter() {
-                            for i in 0..table_row.paths.len() {
-                                tr {
-                                    td { table_row.paths[i].clone() }
-                                    td { "{table_row.category}" }
-                                    create_button_open_pdf(cx, "Open".to_string(), table_row.paths[i].clone()) 
-                                }
+                            tr {
+                                td { table_row.file_name.clone() }
+                                td { table_row.categories.join(", ") }
+                                td { create_button_open_pdf(cx, "Add".to_owned(), table_row.file_name.clone()) }
                             }
                         }
                     }

@@ -1,0 +1,6 @@
+[
+    CategoryTag(
+        label: "Category 1",
+        color: Color(0xFF9B51E0)
+    )
+]

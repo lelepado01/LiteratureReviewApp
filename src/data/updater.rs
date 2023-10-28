@@ -1,14 +1,25 @@
+use crate::data::loader::load_papers;
 
-pub fn update_categories() {
-    let papers = std::fs::read_dir("./papers/").unwrap()
-        .map(|res| res.map(|e| e.path()))
-        .collect::<Result<Vec<_>, std::io::Error>>().unwrap();
 
-    let filenames = papers.iter()
-        .map(|path| path.file_name().unwrap().to_str().unwrap().to_string())
-        .collect::<Vec<String>>();
+pub fn update_categories(file_name: &str, label: &str) {
+    let mut papers = load_papers();
 
-    // write to papers.ron
+    for paper in papers.iter_mut() {
+        if paper.file_name == file_name {
+            let mut found = false;
+            for category in paper.categories.iter() {
+                if category == &label {
+                    found = true;
+                }
+            }
+            if !found {
+                paper.categories.push(label.to_string());
+            } else {
+                paper.categories.retain(|cat| cat != &label);
+            }
+        }
+    }
+
     let mut file = std::fs::File::create("metadata/papers.ron").unwrap();
-    ron::ser::to_writer(&mut file, &filenames).unwrap();
+    ron::ser::to_writer(&mut file, &papers).unwrap();
 }
