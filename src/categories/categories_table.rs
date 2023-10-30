@@ -4,14 +4,18 @@ use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 use serde::{Deserialize, Serialize};
 
 use crate::categories::categories_data::CategoriesData;
-use crate::components::buttons::create_button_open_pdf;
+use crate::components::color_picker_modal::create_color_picker_modal;
 use crate::common::create_search_bar;
-use crate::data::loader::load_categories;
+use crate::data::loader::load_categories_data;
+use crate::data::updater::delete_category_data;
+use crate::components::badges::create_category_badge;
+use crate::categories::categories_data::CategoryTag;
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct CategoriesTableRow {
     pub category: String,
+    pub color: String,
     pub paths: Vec<String>,
 }
 
@@ -20,8 +24,9 @@ pub struct CategoriesTableRow {
 pub enum CategoriesTableField {
     #[default]
     Category,
-    FileName,
-    Open,
+    Color,
+    ColorPicker,
+    DeleteCategory,
 }
 
 /// Specify how we sort our `Person` using `PersonField`.
@@ -30,8 +35,9 @@ impl PartialOrdBy<CategoriesTableRow> for CategoriesTableField {
         // Note how it's just a passthru to `PartialOrd` for each field.
         match self {
             CategoriesTableField::Category => a.category.partial_cmp(&b.category),
-            CategoriesTableField::FileName => Some(std::cmp::Ordering::Equal),
-            CategoriesTableField::Open => Some(std::cmp::Ordering::Equal),
+            CategoriesTableField::Color => Some(std::cmp::Ordering::Equal),
+            CategoriesTableField::ColorPicker => Some(std::cmp::Ordering::Equal),
+            CategoriesTableField::DeleteCategory => Some(std::cmp::Ordering::Equal),
         }
     }
 }
@@ -46,10 +52,8 @@ impl Sortable for CategoriesTableField {
 
 pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) -> Element<'a> {
 
-
-    let mut data = load_categories(); 
-    data.retain(|row| row.category.to_lowercase().contains(categories_data.search_query.get()));
-    categories_data.sorter.sort(data.as_mut_slice());
+    let mut data = load_categories_data(); 
+    data.retain(|row| row.label.to_lowercase().contains(categories_data.search_query.get()));
 
     cx.render(rsx!{
         div { 
@@ -63,17 +67,23 @@ pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) 
                     thead {
                         tr {
                             Th { sorter: categories_data.sorter, field: CategoriesTableField::Category, "Category" }
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::FileName, "File" }
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::Open, "" }
+                            Th { sorter: categories_data.sorter, field: CategoriesTableField::Color, "Preview" }
+                            Th { sorter: categories_data.sorter, field: CategoriesTableField::ColorPicker, "Pick" }
+                            Th { sorter: categories_data.sorter, field: CategoriesTableField::DeleteCategory, "Delete" }
                         }
                     }
                     tbody {
-                        for table_row in data.iter() {
-                            for i in 0..table_row.paths.len() {
-                                tr {
-                                    td { "{table_row.category}" }
-                                    td { create_reference(cx, table_row.paths[i].clone()) }
-                                    create_button_open_pdf(cx, "Open".to_string(), table_row.paths[i].clone()) 
+                        for (i, table_row) in data.iter().enumerate() {
+                            tr {
+                                td { "{table_row.label}" }
+                                td { 
+                                    create_category_badge(cx, CategoryTag { label: table_row.label.clone(), color: table_row.color.clone() })
+                                }
+                                td { 
+                                    create_button_color_picker(cx, i, table_row.label.clone(), categories_data)
+                                }
+                                td {
+                                    create_delete_category_button(cx, table_row.label.clone(), categories_data)
                                 }
                             }
                         }
@@ -84,11 +94,109 @@ pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) 
    })
 }
 
-fn create_reference(cx: Scope, reference : String) -> Element {
-    cx.render(rsx! {
-        div {
-            class: "flex flex-col items-center justify-center",
-            reference,
+fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String, categories_data : CategoriesData<'a>) -> Element<'a> {
+
+    cx.render(rsx!(
+        div{
+            class: "flex flex-row items-center justify-center",
+            button {
+                class: "flex flex-row items-center justify-center",
+                button {
+                    class: "btn btn-primary",
+                    onclick: move |_| {
+
+                        // TODO: refactor with function which handles clicks in table
+                        if let Some(picker) = categories_data.color_picker_row.get() {
+                            if *picker == row {
+                                categories_data.color_picker_row.set(None);
+                            } else {
+                                categories_data.color_picker_row.set(Some(row));
+                            }
+                        } else {
+                            categories_data.color_picker_row.set(Some(row));
+                        }
+                    },
+                    svg{
+                        class: "h-8 w-8 text-black-500",
+                        width: "24",
+                        height: "24",
+                        "viewBox": "0 0 24 24",
+                        "stroke-width": "2",
+                        stroke: "currentColor",
+                        fill: "none",
+                        "stroke-linecap": "round",
+                        "stroke-linejoin": "round",
+                        path {
+                            stroke: "none",
+                            d: "M0 0h24v24H0z"
+                        }
+                        line {
+                            x1: "11",
+                            y1: "7",
+                            x2: "17",
+                            y2: "13"
+                        }
+                        path {
+                            d: "M5 19v-4l9.7 -9.7a1 1 0 0 1 1.4 0l2.6 2.6a1 1 0 0 1 0 1.4l-9.7 9.7h-4"
+                        }
+                    }
+                } 
+                
+            }
+            if let Some(picker) = categories_data.color_picker_row.get() {
+                if *picker == row {
+                    create_color_picker_modal(cx, category, categories_data.color_picker_row, categories_data.color_picker_modal_color)
+                } else {
+                    None
+                }
+            } else {
+                None
+            }
         }
-    })
+    ))
+}
+
+fn create_delete_category_button<'a>(cx: Scope<'a>, category : String, categories_data : CategoriesData<'a>) -> Element<'a> {
+
+    cx.render(rsx!(
+        div{
+            class: "flex flex-row items-center justify-center",
+            button {
+                class: "btn btn-primary",
+                onclick: move |_| { 
+                    delete_category_data(category.clone());
+                    categories_data.category_name_temp.set("".to_string());
+                },
+                svg{
+                    class: "h-8 w-8 text-black-500",
+                    width: "24",
+                    height: "24",
+                    "viewBox": "0 0 24 24",
+                    "stroke-width": "2",
+                    stroke: "currentColor",
+                    fill: "none",
+                    "stroke-linecap": "round",
+                    "stroke-linejoin": "round",
+                    polyline {
+                        points: "3 6 5 6 21 6"
+                    }
+                    path {
+                        d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
+                    }
+                    line {
+                        x1: "10",
+                        y1: "11",
+                        x2: "10",
+                        y2: "17"
+                    }
+                    line {
+                        x1: "14",
+                        y1: "11",
+                        x2: "14",
+                        y2: "17"
+                    }
+                }
+            }
+        }
+    ))
 }

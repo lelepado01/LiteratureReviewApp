@@ -2,11 +2,13 @@
 use dioxus::prelude::*;
 use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 
+use crate::categories::categories_data::CategoryTag;
 use crate::components::buttons::create_button_open_pdf;
 use crate::common::create_search_bar;
+use crate::components::badges::create_category_badge;
 use crate::dashboard::dashboard_data::DashboardData;
 use crate::data::updater::update_categories;
-use crate::data::loader::{load_papers, load_unique_categories, load_dashboard_table_rows};
+use crate::data::loader::{load_papers, load_dashboard_table_rows, load_categories_data};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq)]
@@ -55,11 +57,10 @@ impl Sortable for DashboardTableField {
 
 pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> Element<'a> {
 
-
     let mut data = load_dashboard_table_rows(dashboard_data.search_query.get().to_owned());
     dashboard_data.sorter.sort(data.as_mut_slice());
 
-    let categories = load_unique_categories();
+    let categories = load_categories_data();
 
     cx.render(rsx!{
         div { 
@@ -82,12 +83,16 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
                     }
                     tbody {
                         for table_row in data.iter() {
+
                             tr {
                                 td { "{table_row.file_name}" }
                                 td { "{table_row.pages}" }
                                 td { "{table_row.author}" }
                                 td {
-                                    create_category_tags(cx, table_row.categories.clone())
+                                {
+                                    let mut cats = categories.iter().map(|cat| CategoryTag { label: cat.label.to_string(), color: cat.color.to_string() }).collect::<Vec<CategoryTag>>();
+                                    cats.retain(|cat| table_row.categories.contains(&cat.label)); 
+                                    create_category_tags(cx, cats)}
                                 }
                                 td {
                                     create_button_add_category(cx, "+".to_string(), table_row.file_name.clone(), categories.clone())
@@ -104,20 +109,17 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
    })
 }
 
-fn create_category_tags(cx: Scope, categories : Vec<String>) -> Element {
+fn create_category_tags(cx: Scope, categories : Vec<CategoryTag>) -> Element {
     cx.render(rsx! {
         for cat in categories.iter() {
-            span {
-                class: "inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800",
-                "{cat}"
-            }
+            create_category_badge(cx, CategoryTag { label: cat.label.to_string(), color: cat.color.to_string() })
         }
     })
 }
 
 
 
-pub fn create_button_add_category(cx: Scope, label : String, file_name: String, categories : Vec<String>) -> Element {
+pub fn create_button_add_category(cx: Scope, label : String, file_name: String, categories : Vec<CategoryTag>) -> Element {
 
     let hidden_box = use_state(cx, || true);
     let category = use_state(cx, || "".to_string());
@@ -145,10 +147,8 @@ pub fn create_button_add_category(cx: Scope, label : String, file_name: String, 
                         div {
                             class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
                             for cat in categories.iter() {
-                                create_category_option(cx, cat.to_string(), file_name.clone(), category)
+                                create_category_option(cx, cat.label.to_string(), file_name.clone(), category)
                             }
-                            hr{class: "border-t border-gray-100"}
-                            create_category_adder(cx, file_name.clone(), category)
                         }  
                     })              
                 }
@@ -183,36 +183,6 @@ fn create_category_option<'a>(cx: Scope<'a>, label : String, file_name: String, 
                 category_hook.set("".to_string());
             },
             label.clone()
-        }
-    })
-}
-
-fn create_category_adder<'a>(cx: Scope<'a>, file_name: String, category_hook : &'a UseState<String>) -> Element<'a> {
-    cx.render(rsx! {
-        div {
-            class: "px-4 py-2",
-            div{
-                class: "flex",
-                input {
-                    "type": "text",
-                    class: "border border-gray-300 rounded-md shadow-sm focus:ring-indigo-500 focus:border-indigo-500 block w-full sm:text-sm border-gray-300 rounded-md",
-                    placeholder: "Add Category",
-                    value: category_hook.get().as_str(),
-                    oninput: move |e| {
-                        category_hook.set(e.value.clone());
-                    }
-                }
-                button {
-                    class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
-                    onclick: move |_| {
-                        let category = category_hook.get();
-                        update_categories(&file_name, category);
-
-                        category_hook.set("".to_string());
-                    },
-                    "Add"
-                }
-            }
         }
     })
 }

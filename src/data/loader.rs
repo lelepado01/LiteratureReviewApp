@@ -1,3 +1,4 @@
+use crate::categories::categories_data::{CategoriesData, CategoryTag};
 use crate::categories::categories_table::CategoriesTableRow;
 use crate::export::export_pdf_table::ExportPDFTableRow;
 use crate::dashboard::dashboard_table::DashboardTableRow;
@@ -30,6 +31,7 @@ pub fn load_categories() -> Vec<CategoriesTableRow> {
             if !found {
                 categories.push(CategoriesTableRow {
                     category: category.clone(),
+                    color: "red".to_string(),
                     paths: vec![paper.file_name.clone()],
                 });
             }
@@ -39,18 +41,9 @@ pub fn load_categories() -> Vec<CategoriesTableRow> {
     categories
 }
 
-pub fn load_unique_categories() -> Vec<String> {
-    let file = std::fs::File::open("metadata/papers.ron").unwrap();
-    let papers: Vec<Paper> = ron::de::from_reader(file).unwrap();
-
-    let mut categories : Vec<String> = vec![];
-    for paper in papers.iter() {
-        for category in paper.categories.iter() {
-            if !categories.contains(category) {
-                categories.push(category.clone());
-            }
-        }
-    }
+pub fn load_categories_data() -> Vec<CategoryTag> {
+    let file = std::fs::File::open("metadata/categories.ron").unwrap();
+    let categories: Vec<CategoryTag> = ron::de::from_reader(file).unwrap();
 
     categories
 }
@@ -95,8 +88,6 @@ pub fn load_dashboard_table_rows(name :String) -> Vec<DashboardTableRow> {
 
     result
 }
-
-
 
 pub fn load_pdf_export_rows() -> Vec<ExportPDFTableRow> {
     let file = std::fs::File::open("metadata/papers.ron").unwrap();
