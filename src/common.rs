@@ -49,6 +49,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
     let other_page_icon_class = "text-white rounded-md px-3 py-2 text-sm font-medium hover:bg-gray-700 hover:text-white";
     
     let export_dropdown_hidden = use_state(cx, || true);
+    let search_dropdown_hidden = use_state(cx, || true);
 
     cx.render(rsx! {
         nav {
@@ -75,6 +76,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     href: "#",
                                     onclick: |_| { 
                                         export_dropdown_hidden.set(true);
+                                        search_dropdown_hidden.set(true);
                                         page.set(AppPage::Dashboard); 
                                     },
                                     class: if page.out() == AppPage::Dashboard { current_page_icon_class } else { other_page_icon_class },
@@ -84,6 +86,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     href: "#",
                                     onclick:  |_| { 
                                         export_dropdown_hidden.set(true);
+                                        search_dropdown_hidden.set(true);
                                         page.set(AppPage::Categories); 
                                     },
                                     class: if page.out()  == AppPage::Categories { current_page_icon_class } else { other_page_icon_class },
@@ -93,6 +96,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     href: "#",
                                     onclick: |_| { 
                                         export_dropdown_hidden.set(true);
+                                        search_dropdown_hidden.set(true);
                                         page.set(AppPage::Memos); 
                                     },
                                     class: if page.out() == AppPage::Memos { current_page_icon_class } else { other_page_icon_class },
@@ -101,24 +105,48 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                 a {
                                     href: "#",
                                     onclick: |_| { 
+                                        search_dropdown_hidden.set(!*search_dropdown_hidden.get()); 
                                         export_dropdown_hidden.set(true);
-                                        page.set(AppPage::GlobalSearch); 
                                     },
                                     class: if page.out() == AppPage::GlobalSearch { current_page_icon_class } else { other_page_icon_class },
-                                    "Search"
+                                    "Search",
+                                    if !search_dropdown_hidden.get() {
+                                        cx.render(rsx!(
+                                            div {
+                                                class: "absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
+                                                div {
+                                                    class: "py-1",
+                                                    a {
+                                                        href: "#",
+                                                        class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100",
+                                                        onclick: |_| { 
+                                                            page.set(AppPage::GlobalSearch); 
+                                                            search_dropdown_hidden.set(true);
+                                                            export_dropdown_hidden.set(true);
+                                                        },
+                                                        "Keywords", 
+                                                    },
+                                                    a {
+                                                        href: "#",
+                                                        class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100",
+                                                        onclick: |_| { 
+                                                            page.set(AppPage::PaperSearch); 
+                                                            search_dropdown_hidden.set(true);
+                                                            export_dropdown_hidden.set(true);
+                                                        },
+                                                        "Papers",
+                                                    },
+                                                },
+                                            }
+                                        ))
+                                    }
                                 },
                                 a {
                                     href: "#",
                                     onclick: |_| { 
-                                        export_dropdown_hidden.set(true);
-                                        page.set(AppPage::PaperSearch); 
+                                        export_dropdown_hidden.set(!*export_dropdown_hidden.get()); 
+                                        search_dropdown_hidden.set(true);
                                     },
-                                    class: if page.out() == AppPage::PaperSearch { current_page_icon_class } else { other_page_icon_class },
-                                    "Papers"
-                                },
-                                a {
-                                    href: "#",
-                                    onclick: |_| { export_dropdown_hidden.set(!*export_dropdown_hidden.get()); },
                                     class: if page.out() == AppPage::ExportBib { current_page_icon_class } else { other_page_icon_class },
                                     "Export",
                                     if !export_dropdown_hidden.get() {
@@ -133,6 +161,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                         onclick: |_| { 
                                                             page.set(AppPage::ExportBib); 
                                                             export_dropdown_hidden.set(true);
+                                                            search_dropdown_hidden.set(true);
                                                         },
                                                         "Export as BibTex", 
                                                     },
@@ -142,6 +171,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                         onclick: |_| { 
                                                             page.set(AppPage::ExportText); 
                                                             export_dropdown_hidden.set(true);
+                                                            search_dropdown_hidden.set(true);
                                                         },
                                                         "Export as Text",
                                                     },
@@ -192,26 +222,4 @@ pub fn create_search_bar<'a>(cx: Scope<'a>, name :&'a UseState<String>) -> Eleme
             }
         }
     })
-}
-
-pub fn handle_table_show_modal_hook(index : usize, index_hook : &UseState<std::option::Option<usize>>) -> &UseState<std::option::Option<usize>> {
-    if let Some(picker) = index_hook.get() {
-        if *picker == index {
-            index_hook.set(None);
-        } else {
-            index_hook.set(Some(index));
-        }
-    } else {
-        index_hook.set(Some(index));
-    }
-
-    index_hook
-}
-
-pub fn table_show_modal_hook_is_visible(index : usize, index_hook : &UseState<std::option::Option<usize>>) -> bool {
-    if let Some(picker) = index_hook.get() {
-        return  *picker == index 
-    }
-
-    false
 }

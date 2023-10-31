@@ -10,7 +10,7 @@ use crate::data::loader::load_categories_data;
 use crate::data::updater::delete_category_data;
 use crate::components::badges::create_category_badge;
 use crate::categories::categories_data::CategoryTag;
-use crate::common::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
+use crate::helpers::table_helpers::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]

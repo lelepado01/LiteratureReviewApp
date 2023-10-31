@@ -14,6 +14,7 @@ mod paper_search;
 mod components;
 mod data;
 mod export;
+mod helpers;
 
 use app_data::AppPage; 
 use common::{create_navbar, create_header};

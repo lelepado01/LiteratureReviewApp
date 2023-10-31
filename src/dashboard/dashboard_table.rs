@@ -9,7 +9,7 @@ use crate::components::badges::create_category_badge;
 use crate::dashboard::dashboard_data::DashboardData;
 use crate::data::updater::update_categories;
 use crate::data::loader::{load_papers, load_dashboard_table_rows, load_categories_data};
-use crate::common::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
+use crate::helpers::table_helpers::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq)]
