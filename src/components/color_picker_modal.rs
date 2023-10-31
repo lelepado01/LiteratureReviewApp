@@ -99,10 +99,11 @@ fn get_color_from_image(target_x : f64, target_y : f64) -> String {
     let x = target_x as f32 / imagesize as f32;
     let y = target_y as f32 / imagesize as f32;
 
+    // convert coords on color wheel to rgb values
     let r = (1.0 - x) * 255.0;
     let g = (1.0 - y) * 255.0;
-    let b = (x + y) * 255.0;
-    
+    let b = (1.0 - x * y) * 255.0;
+
     println!("r: {}, g: {}, b: {}", r, g, b);
     format!("#{:02x}{:02x}{:02x}", r as u8, g as u8, b as u8)
 }

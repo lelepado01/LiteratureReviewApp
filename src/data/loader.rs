@@ -1,4 +1,4 @@
-use crate::categories::categories_data::{CategoriesData, CategoryTag};
+use crate::categories::categories_data::CategoryTag;
 use crate::categories::categories_table::CategoriesTableRow;
 use crate::export::export_pdf_table::ExportPDFTableRow;
 use crate::dashboard::dashboard_table::DashboardTableRow;

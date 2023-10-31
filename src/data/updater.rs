@@ -1,6 +1,6 @@
-use crate::{data::loader::load_papers, categories::categories_data::CategoryTag};
 
-use super::loader::{load_categories, load_categories_data};
+use crate::{data::loader::load_papers, categories::categories_data::CategoryTag};
+use super::{loader::load_categories_data, file_helper::{to_papers_file, to_categories_file}};
 
 
 pub fn update_categories(file_name: &str, label: &str) {
@@ -10,44 +10,41 @@ pub fn update_categories(file_name: &str, label: &str) {
         if paper.file_name == file_name {
             let mut found = false;
             for category in paper.categories.iter() {
-                if category == &label {
+                if category == label {
                     found = true;
+                    break;
                 }
             }
             if !found {
                 paper.categories.push(label.to_string());
             } else {
-                paper.categories.retain(|cat| cat != &label);
+                paper.categories.retain(|cat| cat != label);
             }
         }
     }
 
-    let mut file = std::fs::File::create("metadata/papers.ron").unwrap();
-    ron::ser::to_writer(&mut file, &papers).unwrap();
+    to_papers_file(&papers);
 }
 
 pub fn add_category_data(category : String) {
     let mut category_data = load_categories_data();
     category_data.push(CategoryTag { label: category, color: "#ff0000".to_string() });
 
-    let mut file = std::fs::File::create("metadata/categories.ron").unwrap();
-    ron::ser::to_writer(&mut file, &category_data).unwrap();
+    to_categories_file(&category_data);
 }
 
 pub fn delete_category_data(category : String) {
     let mut category_data = load_categories_data();
     category_data.retain(|row| row.label != category);
 
-    let mut file = std::fs::File::create("metadata/categories.ron").unwrap();
-    ron::ser::to_writer(&mut file, &category_data).unwrap();
+    to_categories_file(&category_data);
 
     let mut papers = load_papers();
     for paper in papers.iter_mut() {
         paper.categories.retain(|cat| cat != &category);
     }
 
-    let mut file = std::fs::File::create("metadata/papers.ron").unwrap();
-    ron::ser::to_writer(&mut file, &papers).unwrap();
+    to_papers_file(&papers);
 }
 
 pub fn update_category_color(category : String, color : String) {
@@ -59,6 +56,5 @@ pub fn update_category_color(category : String, color : String) {
         }
     }
 
-    let mut file = std::fs::File::create("metadata/categories.ron").unwrap();
-    ron::ser::to_writer(&mut file, &category_data).unwrap();
+    to_categories_file(&category_data);
 }

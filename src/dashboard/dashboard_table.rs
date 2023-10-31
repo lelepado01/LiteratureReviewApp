@@ -82,7 +82,7 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
                         }
                     }
                     tbody {
-                        for table_row in data.iter() {
+                        for (i, table_row) in data.iter().enumerate() {
 
                             tr {
                                 td { "{table_row.file_name}" }
@@ -95,7 +95,7 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
                                     create_category_tags(cx, cats)}
                                 }
                                 td {
-                                    create_button_add_category(cx, "+".to_string(), table_row.file_name.clone(), categories.clone())
+                                    create_button_add_category(cx, i, table_row.file_name.clone(), categories.clone(), dashboard_data)
                                 }
                                 td {
                                     create_button_open_pdf(cx, "Open".to_string(), table_row.file_name.clone())
@@ -119,10 +119,7 @@ fn create_category_tags(cx: Scope, categories : Vec<CategoryTag>) -> Element {
 
 
 
-pub fn create_button_add_category(cx: Scope, label : String, file_name: String, categories : Vec<CategoryTag>) -> Element {
-
-    let hidden_box = use_state(cx, || true);
-    let category = use_state(cx, || "".to_string());
+pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_name: String, categories : Vec<CategoryTag>, dashboard_data : DashboardData<'a>) -> Element<'a> {
     
     cx.render(rsx! {
         span {
@@ -134,23 +131,33 @@ pub fn create_button_add_category(cx: Scope, label : String, file_name: String, 
                     button {
                         "type": "button",
                         class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
-                        onclick: |_| {
-                            hidden_box.set(!hidden_box.get());
-                        },
-                        label.clone(),
-                    }
-                },
-                if *hidden_box.get() {
-                    None
-                } else {
-                    cx.render(rsx!{
-                        div {
-                            class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
-                            for cat in categories.iter() {
-                                create_category_option(cx, cat.label.to_string(), file_name.clone(), category)
+                        onclick: move |_| {
+                            if let Some(picker) = dashboard_data.hidden_box_index.get() {
+                                if *picker == row_index {
+                                    dashboard_data.hidden_box_index.set(None);
+                                } else {
+                                    dashboard_data.hidden_box_index.set(Some(row_index));
+                                }
+                            } else {
+                                dashboard_data.hidden_box_index.set(Some(row_index));
                             }
-                        }  
-                    })              
+                        },
+                        "+"
+                    },
+                },
+                if let Some(index) = dashboard_data.hidden_box_index.get() {
+                    cx.render(rsx!(
+                        if *index == row_index {
+                            cx.render(rsx!(div {
+                                class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
+                                for cat in categories.iter() {
+                                    create_category_option(cx, cat.label.to_string(), file_name.clone(), dashboard_data.category)
+                                } 
+                            }))
+                        }
+                    ))            
+                } else {
+                    None
                 }
             }
         }
