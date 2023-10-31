@@ -9,6 +9,7 @@ use crate::components::badges::create_category_badge;
 use crate::dashboard::dashboard_data::DashboardData;
 use crate::data::updater::update_categories;
 use crate::data::loader::{load_papers, load_dashboard_table_rows, load_categories_data};
+use crate::common::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq)]
@@ -117,9 +118,7 @@ fn create_category_tags(cx: Scope, categories : Vec<CategoryTag>) -> Element {
     })
 }
 
-
-
-pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_name: String, categories : Vec<CategoryTag>, dashboard_data : DashboardData<'a>) -> Element<'a> {
+pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_name: String, categories : Vec<CategoryTag>, mut dashboard_data : DashboardData<'a>) -> Element<'a> {
     
     cx.render(rsx! {
         span {
@@ -132,32 +131,20 @@ pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_nam
                         "type": "button",
                         class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
                         onclick: move |_| {
-                            if let Some(picker) = dashboard_data.hidden_box_index.get() {
-                                if *picker == row_index {
-                                    dashboard_data.hidden_box_index.set(None);
-                                } else {
-                                    dashboard_data.hidden_box_index.set(Some(row_index));
-                                }
-                            } else {
-                                dashboard_data.hidden_box_index.set(Some(row_index));
-                            }
+                            dashboard_data.hidden_box_index = handle_table_show_modal_hook(row_index, dashboard_data.hidden_box_index);
                         },
                         "+"
                     },
                 },
-                if let Some(index) = dashboard_data.hidden_box_index.get() {
+                if table_show_modal_hook_is_visible(row_index, dashboard_data.hidden_box_index) {
                     cx.render(rsx!(
-                        if *index == row_index {
-                            cx.render(rsx!(div {
-                                class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
-                                for cat in categories.iter() {
-                                    create_category_option(cx, cat.label.to_string(), file_name.clone(), dashboard_data.category)
-                                } 
-                            }))
-                        }
-                    ))            
-                } else {
-                    None
+                        cx.render(rsx!(div {
+                            class: "absolute right-0 z-10 mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
+                            for cat in categories.iter() {
+                                create_category_option(cx, cat.label.to_string(), file_name.clone(), dashboard_data.category)
+                            } 
+                        }))
+                    ))   
                 }
             }
         }

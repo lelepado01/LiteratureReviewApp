@@ -10,6 +10,7 @@ use crate::data::loader::load_categories_data;
 use crate::data::updater::delete_category_data;
 use crate::components::badges::create_category_badge;
 use crate::categories::categories_data::CategoryTag;
+use crate::common::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
 
 /// Our table row. Type `T`.
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
@@ -94,7 +95,7 @@ pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) 
    })
 }
 
-fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String, categories_data : CategoriesData<'a>) -> Element<'a> {
+fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String, mut categories_data : CategoriesData<'a>) -> Element<'a> {
 
     cx.render(rsx!(
         div{
@@ -104,17 +105,7 @@ fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String,
                 button {
                     class: "btn btn-primary",
                     onclick: move |_| {
-
-                        // TODO: refactor with function which handles clicks in table
-                        if let Some(picker) = categories_data.color_picker_row.get() {
-                            if *picker == row {
-                                categories_data.color_picker_row.set(None);
-                            } else {
-                                categories_data.color_picker_row.set(Some(row));
-                            }
-                        } else {
-                            categories_data.color_picker_row.set(Some(row));
-                        }
+                        categories_data.color_picker_row = handle_table_show_modal_hook(row, categories_data.color_picker_row);
                     },
                     svg{
                         class: "h-8 w-8 text-black-500",
@@ -143,15 +134,22 @@ fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String,
                 } 
                 
             }
-            if let Some(picker) = categories_data.color_picker_row.get() {
-                if *picker == row {
+            if table_show_modal_hook_is_visible(row, categories_data.color_picker_row) {
+                cx.render(rsx!(
                     create_color_picker_modal(cx, category, categories_data.color_picker_row, categories_data.color_picker_modal_color)
-                } else {
-                    None
-                }
+                ))
             } else {
                 None
             }
+            // if let Some(picker) = categories_data.color_picker_row.get() {
+            //     if *picker == row {
+            //         create_color_picker_modal(cx, category, categories_data.color_picker_row, categories_data.color_picker_modal_color)
+            //     } else {
+            //         None
+            //     }
+            // } else {
+            //     None
+            // }
         }
     ))
 }
