@@ -144,7 +144,7 @@ fn create_search_result<'a>(cx : Scope<'a>, result : &'a GlobalSearchResult) -> 
                         result.file_content.clone()
                     }
                     create_padding_block(cx)
-                    create_button_open_pdf(cx, "Open".to_string(), result.file_name.clone())
+                    create_button_open_pdf(cx, result.file_name.clone())
                 }
             }
         }

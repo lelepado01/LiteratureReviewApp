@@ -103,7 +103,7 @@ fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String,
             button {
                 class: "flex flex-row items-center justify-center",
                 button {
-                    class: "btn btn-primary",
+                    class: "inline-flex items-center rounded-md bg-indigo-600 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
                     onclick: move |_| {
                         categories_data.color_picker_row = handle_table_show_modal_hook(row, categories_data.color_picker_row);
                     },
@@ -112,7 +112,7 @@ fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String,
                         width: "24",
                         height: "24",
                         "viewBox": "0 0 24 24",
-                        "stroke-width": "2",
+                        "stroke-width": "1",
                         stroke: "currentColor",
                         fill: "none",
                         "stroke-linecap": "round",
@@ -141,15 +141,6 @@ fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String,
             } else {
                 None
             }
-            // if let Some(picker) = categories_data.color_picker_row.get() {
-            //     if *picker == row {
-            //         create_color_picker_modal(cx, category, categories_data.color_picker_row, categories_data.color_picker_modal_color)
-            //     } else {
-            //         None
-            //     }
-            // } else {
-            //     None
-            // }
         }
     ))
 }
@@ -160,7 +151,7 @@ fn create_delete_category_button<'a>(cx: Scope<'a>, category : String, categorie
         div{
             class: "flex flex-row items-center justify-center",
             button {
-                class: "btn btn-primary",
+                class: "inline-flex items-center rounded-md bg-red-800 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
                 onclick: move |_| { 
                     delete_category_data(category.clone());
                     categories_data.category_name_temp.set("".to_string());
@@ -170,7 +161,7 @@ fn create_delete_category_button<'a>(cx: Scope<'a>, category : String, categorie
                     width: "24",
                     height: "24",
                     "viewBox": "0 0 24 24",
-                    "stroke-width": "2",
+                    "stroke-width": "1",
                     stroke: "currentColor",
                     fill: "none",
                     "stroke-linecap": "round",

@@ -73,7 +73,7 @@ pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Elemen
                             tr {
                                 td { table_row.file_name.clone() }
                                 td { table_row.categories.join(", ") }
-                                td { create_button_open_pdf(cx, "Add".to_owned(), table_row.file_name.clone()) }
+                                td { create_button_open_pdf(cx, table_row.file_name.clone()) }
                             }
                         }
                     }

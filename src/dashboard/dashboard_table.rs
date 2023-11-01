@@ -78,8 +78,8 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
                             Th { sorter: dashboard_data.sorter, field: DashboardTableField::Pages, "Pages" }
                             Th { sorter: dashboard_data.sorter, field: DashboardTableField::Author, "Author" }
                             Th { sorter: dashboard_data.sorter, field: DashboardTableField::Categories, "Categories" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::AddCategory, "Add Category" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Open, "PDF"}
+                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::AddCategory, "Add" }
+                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Open, "Open"}
                         }
                     }
                     tbody {
@@ -99,7 +99,7 @@ pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> 
                                     create_button_add_category(cx, i, table_row.file_name.clone(), categories.clone(), dashboard_data)
                                 }
                                 td {
-                                    create_button_open_pdf(cx, "Open".to_string(), table_row.file_name.clone())
+                                    create_button_open_pdf(cx, table_row.file_name.clone())
                                 }
                             }
                         }
@@ -129,11 +129,23 @@ pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_nam
                     class: "inline-flex items-center overflow-hidden rounded-md border bg-white",
                     button {
                         "type": "button",
-                        class: "inline-flex items-center px-4 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
+                        class: "inline-flex items-center px-2 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
                         onclick: move |_| {
                             dashboard_data.hidden_box_index = handle_table_show_modal_hook(row_index, dashboard_data.hidden_box_index);
                         },
-                        "+"
+                        svg {
+                            xmlns: "http://www.w3.org/2000/svg",
+                            fill: "none",
+                            "viewBox": "0 0 24 24",
+                            "stroke-width": "1.5",
+                            stroke: "currentColor",
+                            class: "w-6 h-6",
+                            path {
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
+                                d: "M12 4.5v15m7.5-7.5h-15"
+                            }
+                        }
                     },
                 },
                 if table_show_modal_hook_is_visible(row_index, dashboard_data.hidden_box_index) {

@@ -1,6 +1,14 @@
 
+
 use crate::{data::loader::load_papers, categories::categories_data::CategoryTag};
 use super::{loader::load_categories_data, file_helper::{to_papers_file, to_categories_file}};
+use crate::data::Paper;
+
+pub fn add_paper_data(paper_data: Paper) {
+    let mut papers = load_papers();
+    papers.push(paper_data);
+    to_papers_file(&papers);
+}
 
 
 pub fn update_categories(file_name: &str, label: &str) {

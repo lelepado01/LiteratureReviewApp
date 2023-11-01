@@ -2,9 +2,11 @@
 use dioxus::prelude::*;
 
 use crate::components::padding::create_padding_block;
+use crate::data::Paper;
 use crate::paper_search::paper_search_data::PaperSearchData;
 use crate::paper_search::paper_search_results::{PaperSearchResult, search_paper_online};
 use crate::paper_search::get_data::search_abstract;
+use crate::data::updater::add_paper_data;
 
 pub fn create_paper_search_page<'a>(cx: Scope<'a>, paper_search_data : PaperSearchData<'a>) -> Element<'a> {
 
@@ -128,6 +130,33 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                         class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
                         "href": "#",
                         onclick: move |_| {
+                            let paper_data = download_paper(search_result.link.clone());
+                            add_paper_data(paper_data);
+                        },
+                        svg {
+                            class: "w-6 h-6",
+                            "xmlns": "http://www.w3.org/2000/svg",
+                            "fill": "none",
+                            "viewBox": "0 0 24 24",
+                            "stroke-width": "1.5",
+                            "stroke": "currentColor",
+                            path {
+                                "stroke-linecap": "round",
+                                "stroke-linejoin": "round",
+                                d: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                            }
+                        },
+                    }
+                }
+            }
+            create_padding_block(cx)
+            div {
+                class: "sm:col-span-2",
+                div{
+                    a {
+                        class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                        "href": "#",
+                        onclick: move |_| {
                             abstract_data.set(search_abstract(search_result.link.clone()));
                             abstract_modal_hidden.set(false);
                         },
@@ -209,4 +238,29 @@ fn create_paper_abstract_modal<'a>(cx : Scope<'a>, abstract_data : &'a UseState<
             }
         }
     ))
+}
+
+fn download_paper(link : String) -> Paper {
+
+    let p = pollster::block_on(reqwest::get(link.as_str()));
+
+    println!("Downloading paper {}", link.as_str());
+    let file_name = link.split('/').last().unwrap();
+
+    match p {
+        Ok(response) => {
+            let mut file = std::fs::File::create("papers/".to_owned() + file_name).unwrap();
+            println!("Downloading paper{:?}", response); 
+            // let _ = std::io::copy(response, &mut file);
+        },
+        Err(_) => {
+            println!("Error downloading paper");
+        }
+    } 
+    
+    Paper {
+        file_name: "".to_string(),
+        title: "".to_string(),
+        categories: vec![]
+    }
 }

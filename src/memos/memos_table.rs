@@ -110,7 +110,7 @@ pub fn MemoTable(cx: Scope) -> Element {
                                     create_category_tags(cx, table_row.categories.clone())
                                 }
                                 td {
-                                    create_button_open_pdf(cx, "Open".to_string(), table_row.path.clone())
+                                    create_button_open_pdf(cx, table_row.path.clone())
                                 }
                             }
                         }
