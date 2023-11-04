@@ -151,7 +151,7 @@ fn create_delete_category_button<'a>(cx: Scope<'a>, category : String, categorie
         div{
             class: "flex flex-row items-center justify-center",
             button {
-                class: "inline-flex items-center rounded-md bg-red-800 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-indigo-600",
+                class: "inline-flex items-center rounded-md bg-red-800 px-2 py-2 text-sm font-semibold text-white shadow-sm hover:bg-red-600 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-red-600",
                 onclick: move |_| { 
                     delete_category_data(category.clone());
                     categories_data.category_name_temp.set("".to_string());

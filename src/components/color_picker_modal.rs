@@ -40,8 +40,15 @@ pub fn create_color_picker_modal<'a>(
                                                 class: "flex flex-row justify-between items-center",
                                                 img {
                                                     src: "assets/colormap.jpg",
+                                                    draggable: false,
                                                     onclick: |e : MouseEvent| {
+                                                        e.stop_propagation();
                                                         let target = e.data.element_coordinates(); 
+                                                        let color = get_color_from_image(target.x, target.y);
+                                                        modal_state_color.set(color);
+                                                    },
+                                                    ondrag: |e : DragEvent| {
+                                                        let target = e.data.mouse.element_coordinates();
                                                         let color = get_color_from_image(target.x, target.y);
                                                         modal_state_color.set(color);
                                                     },

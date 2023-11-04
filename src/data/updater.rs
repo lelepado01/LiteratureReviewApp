@@ -1,7 +1,7 @@
 
 
-use crate::{data::loader::load_papers, categories::categories_data::CategoryTag};
-use super::{loader::load_categories_data, file_helper::{to_papers_file, to_categories_file}};
+use crate::{data::loader::load_papers, categories::categories_data::CategoryTag, memos::memo_data::Memo};
+use super::{loader::load_categories_data, file_helper::{to_papers_file, to_categories_file, to_memos_file}};
 use crate::data::Paper;
 
 pub fn add_paper_data(paper_data: Paper) {
@@ -65,4 +65,9 @@ pub fn update_category_color(category : String, color : String) {
     }
 
     to_categories_file(&category_data);
+}
+
+
+pub fn update_memo_data(memos : Vec<Memo>) {
+    to_memos_file(&memos);
 }

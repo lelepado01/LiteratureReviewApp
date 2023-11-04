@@ -2,6 +2,7 @@ use crate::categories::categories_data::CategoryTag;
 use crate::categories::categories_table::CategoriesTableRow;
 use crate::export::export_pdf_table::ExportPDFTableRow;
 use crate::dashboard::dashboard_table::DashboardTableRow;
+use crate::memos::memo_data::Memo;
 
 use super::Paper;
 
@@ -39,6 +40,13 @@ pub fn load_categories() -> Vec<CategoriesTableRow> {
     }
 
     categories
+}
+
+pub fn load_memos() -> Vec<Memo> {
+    let file = std::fs::File::open("metadata/memos.ron").unwrap();
+    let memos: Vec<Memo> = ron::de::from_reader(file).unwrap();
+
+    memos
 }
 
 pub fn load_categories_data() -> Vec<CategoryTag> {

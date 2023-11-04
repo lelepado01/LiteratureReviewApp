@@ -129,17 +129,17 @@ pub fn create_button_add_category<'a>(cx: Scope<'a>, row_index : usize, file_nam
                     class: "inline-flex items-center overflow-hidden rounded-md border bg-white",
                     button {
                         "type": "button",
-                        class: "inline-flex items-center px-2 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-700 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
+                        class: "inline-flex items-center px-2 py-2 border border-transparent text-sm font-medium rounded-md shadow-sm text-white bg-indigo-600 hover:bg-indigo-500 focus-visible:outline focus-visible:ring-2 focus-visible:ring-offset-2 focus-visible:ring-indigo-500",
                         onclick: move |_| {
                             dashboard_data.hidden_box_index = handle_table_show_modal_hook(row_index, dashboard_data.hidden_box_index);
                         },
                         svg {
+                            class: "w-8 h-8 text-black-500",
                             xmlns: "http://www.w3.org/2000/svg",
                             fill: "none",
                             "viewBox": "0 0 24 24",
-                            "stroke-width": "1.5",
+                            "stroke-width": "1",
                             stroke: "currentColor",
-                            class: "w-6 h-6",
                             path {
                                 "stroke-linecap": "round",
                                 "stroke-linejoin": "round",

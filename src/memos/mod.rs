@@ -1,2 +1,2 @@
-pub mod memos;
-mod memos_table;
+pub mod render;
+pub mod memo_data;
