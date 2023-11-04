@@ -1,18 +1,19 @@
 
-use dioxus::prelude::*;
+
+use dioxus::prelude::{*, SvgAttributes};
 
 use crate::components::padding::create_padding_block;
-use crate::data::Paper;
 use crate::paper_search::paper_search_data::PaperSearchData;
 use crate::paper_search::paper_search_results::{PaperSearchResult, search_paper_online};
 use crate::paper_search::get_data::search_abstract;
 use crate::data::updater::add_paper_data;
+use crate::data::downloader::download_paper;
 
 pub fn create_paper_search_page<'a>(cx: Scope<'a>, paper_search_data : PaperSearchData<'a>) -> Element<'a> {
 
     cx.render(rsx!(
         create_paper_search_bar(cx, paper_search_data.search_query, paper_search_data.search_results)
-        create_paper_search_results(cx, paper_search_data.clone())
+        create_paper_search_list(cx, paper_search_data.clone())
         if !paper_search_data.abstract_modal_hidden.get() {
             create_paper_abstract_modal(cx, paper_search_data.abstract_modal_data, paper_search_data.abstract_modal_hidden)
         }
@@ -65,7 +66,7 @@ fn create_paper_search_bar<'a>(cx: Scope<'a>, search_query: &'a UseState<String>
     ))
 }
 
-fn create_paper_search_results<'a>(cx: Scope<'a>, paper_search_data : PaperSearchData<'a>) -> Element<'a> {
+fn create_paper_search_list<'a>(cx: Scope<'a>, paper_search_data : PaperSearchData<'a>) -> Element<'a> {
     cx.render(rsx!(
         div{
             class : "max-w-7xl mx-auto py-8 px-8 sm:px-6 lg:px-8 items-center",
@@ -77,12 +78,12 @@ fn create_paper_search_results<'a>(cx: Scope<'a>, paper_search_data : PaperSearc
 }
 
 fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearchResult, abstract_data : &'a UseState<String>, abstract_modal_hidden : &'a UseState<bool>) -> Element<'a> {
+    
     cx.render(rsx!(
         div {
-            class: "bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg flex items-center",
+            class: "m-2 bg-white dark:bg-gray-800 shadow overflow-hidden sm:rounded-lg flex items-center",
             div {
-                // max width of 2xl
-                class: "px-4 py-5 sm:p-6 flex flex-col justify-between",
+                class: "px-4 py-5 sm:p-6 flex flex-col justify-between w-2xl max-w-2xl",
                 h3 {
                     class: "text-lg leading-6 font-medium text-gray-900 dark:text-white overflow-hidden overflow-ellipsis",
                     search_result.file_name.clone()
@@ -94,10 +95,9 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
             }
             create_padding_block(cx)
             div {
-                // card like
                 class: "px-4 py-5 sm:p-6",
                 dl {
-                    class: "grid grid-cols-1 gap-x-4 gap-y-8 sm:grid-cols-2 sm:gap-y-12",
+                    class: "grid grid-cols-1 gap-16 sm:grid-cols-2 sm:gap-y-12",
                     div {
                         class: "sm:col-span-1",
                         dt {
@@ -106,7 +106,7 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                         }
                         dd {
                             class: "mt-1 text-sm text-gray-900 dark:text-white",
-                            search_result.author.as_str()
+                            search_result.author.replace('\n', ". ").as_str()
                         }
                     }
                     div {
@@ -123,56 +123,65 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                 }
             }
             create_padding_block(cx)
-            div {
-                class: "sm:col-span-2",
-                div{
-                    a {
-                        class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                        "href": "#",
-                        onclick: move |_| {
-                            let paper_data = download_paper(search_result.link.clone());
-                            add_paper_data(paper_data);
-                        },
-                        svg {
-                            class: "w-6 h-6",
-                            "xmlns": "http://www.w3.org/2000/svg",
-                            "fill": "none",
-                            "viewBox": "0 0 24 24",
-                            "stroke-width": "1.5",
-                            "stroke": "currentColor",
-                            path {
-                                "stroke-linecap": "round",
-                                "stroke-linejoin": "round",
-                                d: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+            div{
+                class: "flex flex-row justify-end items-center",
+                if search_result.download_link.ends_with(".pdf") {
+                    cx.render(rsx!(
+                        div {
+                            class: "sm:col-span-2",
+                            div{
+                                a {
+                                    class: "w-full flex items-center justify-center p-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                                    "href": "#",
+                                    onclick: move |_| {
+                                        let paper_data = download_paper(search_result.download_link.clone(), search_result.file_name.clone(), search_result.author.clone());
+                                        add_paper_data(paper_data);
+                                    },
+                                    svg {
+                                        class: "w-8 h-8",
+                                        "xmlns": "http://www.w3.org/2000/svg",
+                                        "fill": "none",
+                                        "viewBox": "0 0 24 24",
+                                        "stroke-width": "1",
+                                        "stroke": "white",
+                                        path {
+                                            "stroke-linecap": "round",
+                                            "stroke-linejoin": "round",
+                                            d: "M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                                        }
+                                    },
+                                }
                             }
-                        },
+                        }
+                    ))
+                } else {
+                    cx.render(rsx!(div { class: "p-8" }))
+                }
+                create_padding_block(cx)
+                div {
+                    class: "sm:col-span-2",
+                    div{
+                        a {
+                            class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                            "href": "#",
+                            onclick: move |_| {
+                                abstract_data.set(search_abstract(search_result.page_link.clone()));
+                                abstract_modal_hidden.set(false);
+                            },
+                            "Open Abstract",
+                        }
                     }
                 }
-            }
-            create_padding_block(cx)
-            div {
-                class: "sm:col-span-2",
-                div{
-                    a {
-                        class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                        "href": "#",
-                        onclick: move |_| {
-                            abstract_data.set(search_abstract(search_result.link.clone()));
-                            abstract_modal_hidden.set(false);
-                        },
-                        "Open Abstract",
-                    }
-                }
-            }
-            create_padding_block(cx)
-            div {
-                class: "sm:col-span-2",
-                div{
-                    a {
-                        class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
-                        "href": search_result.link.as_str(),
-                        "target": "_blank",
-                        "Open Link"
+                create_padding_block(cx)
+                div {
+                    class: "sm:col-span-2",
+                    div{
+                        a {
+                            class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                            "href": search_result.page_link.as_str(),
+                            "target": "_blank",
+                            "Open Link"
+                        }
                     }
                 }
             }
@@ -196,7 +205,6 @@ fn create_paper_abstract_modal<'a>(cx : Scope<'a>, abstract_data : &'a UseState<
                 span {
                     class: "hidden sm:inline-block sm:align-middle sm:h-screen",
                     aria_hidden: "true",
-                    "​"
                 }
                 div {
                     class: "inline-block align-bottom bg-white dark:bg-gray-800 rounded-lg text-left overflow-hidden shadow-xl transform transition-all sm:my-8 sm:align-middle sm:max-w-lg sm:w-full",
@@ -228,9 +236,7 @@ fn create_paper_abstract_modal<'a>(cx : Scope<'a>, abstract_data : &'a UseState<
                         class: "bg-gray-50 dark:bg-gray-700 px-4 py-3 sm:px-6 sm:flex sm:flex-row-reverse",
                         button {
                             class: "w-full inline-flex justify-center rounded-md border border-transparent shadow-sm px-4 py-2 bg-blue-700 text-base font-medium text-white hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 sm:ml-3 sm:w-auto sm:text-sm",
-                            onclick: move |_| {
-                                abstract_modal_hidden.set(true);
-                            },
+                            onclick: move |_| { abstract_modal_hidden.set(true); },
                             "Close"
                         }
                     }
@@ -238,29 +244,4 @@ fn create_paper_abstract_modal<'a>(cx : Scope<'a>, abstract_data : &'a UseState<
             }
         }
     ))
-}
-
-fn download_paper(link : String) -> Paper {
-
-    let p = pollster::block_on(reqwest::get(link.as_str()));
-
-    println!("Downloading paper {}", link.as_str());
-    let file_name = link.split('/').last().unwrap();
-
-    match p {
-        Ok(response) => {
-            let mut file = std::fs::File::create("papers/".to_owned() + file_name).unwrap();
-            println!("Downloading paper{:?}", response); 
-            // let _ = std::io::copy(response, &mut file);
-        },
-        Err(_) => {
-            println!("Error downloading paper");
-        }
-    } 
-    
-    Paper {
-        file_name: "".to_string(),
-        title: "".to_string(),
-        categories: vec![]
-    }
 }

@@ -4,7 +4,8 @@ use select::{document::Document, predicate::{Predicate, Class, Name}};
 #[derive(Clone, Debug, PartialEq)]
 pub struct PaperSearchResult {
     pub file_name: String,
-    pub link: String,
+    pub page_link: String,
+    pub download_link: String,
     pub file_content: String,
     pub author: String,
     pub year: String,
@@ -22,12 +23,27 @@ pub fn search_paper_online(query: &str) -> Vec<PaperSearchResult> {
     let titles = Document::from(body.as_str())
         .find(Name("h3").and(Class("gs_rt")).child(Name("a")))
         .map(|n| n.text())
-        .collect::<Vec<_>>()[..10].to_vec();
+        .collect::<Vec<_>>();
 
-    let links = Document::from(body.as_str())
+    let links: Vec<String> = Document::from(body.as_str())
         .find(Name("h3").and(Class("gs_rt")).child(Name("a")))
         .map(|n| n.attr("href").unwrap_or_default().to_string())
         .collect::<Vec<_>>();
+
+    let mut download_links = Document::from(body.as_str())
+        .find(Name("div").and(Class("gs_or_ggsm")).child(Name("a")))
+        .map(|n| n.attr("href").unwrap_or_default().to_string())
+        .collect::<Vec<_>>();
+
+    for (i, link) in links.iter().enumerate() {
+        if link.ends_with(".pdf") {
+            download_links.insert(i, link.clone());
+        }
+
+        if link.contains("arxiv.org") {
+            download_links[i] = "https://arxiv.org/pdf/".to_owned() + link.split('/').last().unwrap_or_default() + ".pdf";
+        }
+    }
 
     let mut authors = Document::from(body.as_str())
         .find(Name("div").and(Class("gs_a")))
@@ -56,11 +72,18 @@ pub fn search_paper_online(query: &str) -> Vec<PaperSearchResult> {
         .map(|n| n.text())
         .collect::<Vec<_>>();
 
+    let mut min_len = std::cmp::min(titles.len(), links.len());
+    min_len = std::cmp::min(min_len, download_links.len());
+    min_len = std::cmp::min(min_len, authors.len());
+    min_len = std::cmp::min(min_len, years.len());
+    min_len = std::cmp::min(min_len, intro.len());
+
     let mut results = vec![];
-    for i in 0..intro.len() {
+    for i in 0..min_len {
         results.push(PaperSearchResult {
             file_name: titles[i].clone(),
-            link: links[i].clone(),
+            page_link: links[i].clone(),
+            download_link: download_links[i].clone(),
             file_content: intro[i].clone(),
             author: authors[i].clone(),
             year: years[i].clone(),
