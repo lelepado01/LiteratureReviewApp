@@ -11,6 +11,33 @@ pub fn add_paper_data(paper_data: Paper) {
 }
 
 
+pub fn update_paper_data() {
+    let papers = load_papers();
+    let paper_files = std::fs::read_dir("papers")
+        .unwrap()
+        .map(|entry| 
+            entry.unwrap().file_name().to_string_lossy().to_string())
+        .collect::<Vec<_>>();
+    
+    for paper_file in paper_files.iter() {
+        let mut found = false;
+        for paper_data in papers.iter() {
+            if paper_file == &paper_data.file_name {
+                found = true;
+                break;
+            }
+        }
+        if !found {
+            add_paper_data(Paper{
+                file_name: paper_file.clone(),
+                title: paper_file.clone(),
+                authors: "".to_string(),
+                categories: vec![],
+            }); 
+        } 
+    }
+}
+
 pub fn update_categories(file_name: &str, label: &str) {
     let mut papers = load_papers();
 

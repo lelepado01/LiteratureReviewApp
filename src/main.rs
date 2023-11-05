@@ -1,6 +1,4 @@
 #![allow(non_snake_case)]
-use std::fs::File;
-
 use dioxus::prelude::*;
 use dioxus_desktop::{Config, WindowBuilder};
 
@@ -31,7 +29,6 @@ use paper_search::render::create_paper_search_page;
 use paper_search::paper_search_data::PaperSearchData;
 use export::render::create_export_page;
 use export::ExportTo;
-use std::io::Write; 
 
 fn main() {
     let cfg = Config::default().with_window(
