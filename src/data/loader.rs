@@ -1,3 +1,4 @@
+use crate::categories;
 use crate::categories::categories_data::CategoryTag;
 use crate::categories::categories_table::CategoriesTableRow;
 use crate::export::export_pdf_table::ExportPDFTableRow;
@@ -100,11 +101,23 @@ pub fn load_pdf_export_rows() -> Vec<ExportPDFTableRow> {
     let file = std::fs::File::open("metadata/papers.ron").unwrap();
     let papers: Vec<Paper> = ron::de::from_reader(file).unwrap();
 
+    let categories = load_categories_data();
+
     let mut result : Vec<ExportPDFTableRow> = vec![];
     for paper in papers.iter() {
+
+        let mut paper_cats = vec![];
+        for category in paper.categories.iter() {
+            for cat in categories.iter() {
+                if cat.label == *category {
+                    paper_cats.push(cat.clone());
+                }
+            }
+        }
+
         result.push(ExportPDFTableRow {
             file_name: paper.file_name.clone(),
-            categories: paper.categories.clone(),
+            categories: paper_cats,
         });
     }
 

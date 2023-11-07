@@ -13,6 +13,7 @@ mod components;
 mod data;
 mod export;
 mod helpers;
+mod scholar;
 
 use categories::categories_data::CategoriesData;
 use dashboard::dashboard_data::DashboardData;

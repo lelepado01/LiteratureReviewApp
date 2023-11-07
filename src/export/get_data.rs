@@ -3,18 +3,19 @@ use std::{fs::File, io::Write};
 
 use super::export_data::ExportData;
 
-use gscholar::scholar::{init_client, ScholarArgs}; 
+use crate::scholar::scholar::ScholarArgs;
+use crate::scholar::scholar::init_client; 
 
 pub fn export_to_bib(export_data : ExportData) {
 
     let mut data : Vec<String> = vec![]; 
-    for cit in  export_data.citation_data.iter() {
-        let title = cit.title.clone().as_str();
+    for (i, cit) in export_data.citation_data.read().iter().enumerate() {
+        let tit = ""; //&export_data.citation_data[i].title; 
         let s = ScholarArgs {
-            query: "Attn",//title,
+            query: tit,
             cite_id: None,
-            from_year: Some(2018),
-            to_year: Some(2021),
+            from_year: None,
+            to_year: None,
             sort_by: Some(0),
             cluster_id: None,
             lang: Some("en"),
@@ -36,7 +37,7 @@ pub fn export_to_bib(export_data : ExportData) {
     }
 
 
-    let mut file = File::create("bibliography.bib").unwrap();
+    let mut file = File::create("exports/bibliography.bib").unwrap();
     file.write_all(data.join("\n").as_bytes()).unwrap();
     file.sync_all().unwrap();
     file.flush().unwrap();

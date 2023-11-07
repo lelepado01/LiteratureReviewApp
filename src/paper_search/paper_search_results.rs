@@ -1,5 +1,7 @@
 use select::{document::Document, predicate::{Predicate, Class, Name}};
 
+use crate::data::downloader::download_paper_citation;
+
 
 #[derive(Clone, Debug, PartialEq)]
 pub struct PaperSearchResult {
@@ -15,7 +17,9 @@ pub struct PaperSearchResult {
 
 pub fn search_paper_online(query: &str) -> Vec<PaperSearchResult> {
 
+    
     let res = reqwest::get("https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=".to_owned() + query.replace(' ', "+").as_str()); 
+    download_paper_citation("https://scholar.google.com/scholar?hl=en&as_sdt=0%2C5&q=".to_owned() + query.replace(' ', "+").as_str()); 
     let res = pollster::block_on(res).unwrap();
     let body = res.text();
     let body = pollster::block_on(body).unwrap(); 

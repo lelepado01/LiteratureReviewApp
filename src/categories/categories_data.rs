@@ -27,7 +27,7 @@ impl <'a> CategoriesData<'a> {
     }
 }
 
-#[derive(Clone, Serialize, Deserialize)]
+#[derive(Clone, Serialize, Deserialize, PartialEq)]
 pub struct CategoryTag {
     pub label: String,
     pub color: String,

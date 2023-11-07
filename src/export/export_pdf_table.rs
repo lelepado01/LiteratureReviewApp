@@ -3,17 +3,19 @@ use dioxus::prelude::*;
 use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 use serde::{Deserialize, Serialize};
 
-use crate::components::buttons::create_button_open_pdf;
+use crate::categories::categories_data::CategoryTag;
+use crate::data::downloader::download_paper_citation;
 use crate::common::create_search_bar;
 use crate::data::loader::load_pdf_export_rows;
+use crate::components::badges::create_category_badge;
 
 use super::export_data::ExportData;
 
 /// Our table row. Type `T`.
-#[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
+#[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExportPDFTableRow {
     pub file_name: String,
-    pub categories: Vec<String>,
+    pub categories: Vec<CategoryTag>,
 }
 
 /// Our table columns. Type `F`. One for each field in Person.
@@ -30,7 +32,7 @@ impl PartialOrdBy<ExportPDFTableRow> for ExportPDFTableField {
     fn partial_cmp_by(&self, a: &ExportPDFTableRow, b: &ExportPDFTableRow) -> Option<std::cmp::Ordering> {
         // Note how it's just a passthru to `PartialOrd` for each field.
         match self {
-            ExportPDFTableField::Category => a.categories.partial_cmp(&b.categories),
+            ExportPDFTableField::Category => Some(std::cmp::Ordering::Equal),
             ExportPDFTableField::FileName => Some(std::cmp::Ordering::Equal),
             ExportPDFTableField::AddRemove => Some(std::cmp::Ordering::Equal),
         }
@@ -46,7 +48,6 @@ impl Sortable for ExportPDFTableField {
 }
 
 pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Element<'a> {
-
 
     let mut data = load_pdf_export_rows(); 
     data.retain(|row| row.file_name.to_lowercase().contains(export_data.search_query.get()));
@@ -70,15 +71,39 @@ pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Elemen
                     }
                     tbody {
                         for table_row in data.iter() {
-                            tr {
-                                td { table_row.file_name.clone() }
-                                td { table_row.categories.join(", ") }
-                                td { create_button_open_pdf(cx, table_row.file_name.clone()) }
-                            }
+                            create_table_row(cx, table_row.clone(), export_data)
                         }
                     }
                 }
             }
         }
    })
+}
+
+fn create_table_row<'a>(cx : Scope<'a>, table_row : ExportPDFTableRow, export_data : ExportData<'a>) -> Element<'a> {
+    cx.render(rsx!(
+        tr {
+            td { table_row.file_name.clone() }
+            td { 
+                for category in table_row.categories.iter() {
+                    cx.render(rsx!(create_category_badge(cx, category.clone())))
+                }
+            }
+            td { 
+                div{
+                    class: "flex flex-row items-center justify-center",
+                    button {
+                        class: "bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded",
+                        onclick: move |_| {
+                            let tr = table_row.file_name.clone();
+                            let cit = download_paper_citation(tr);
+                            println!("{:?}", cit); 
+                            export_data.add_citation_data(cit);
+                        },
+                        "Add"
+                    }
+                }
+            }
+        }
+    ))
 }
