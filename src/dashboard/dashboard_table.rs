@@ -8,7 +8,7 @@ use crate::common::create_search_bar;
 use crate::components::badges::create_category_badge;
 use crate::dashboard::dashboard_data::DashboardData;
 use crate::data::updater::update_categories;
-use crate::data::loader::{load_papers, load_dashboard_table_rows, load_categories_data};
+use crate::data::loader::{load_papers, load_dashboard_table_rows, load_categories_data, LoaderResult};
 use crate::helpers::table_helpers::{handle_table_show_modal_hook, table_show_modal_hook_is_visible};
 
 /// Our table row. Type `T`.
@@ -58,56 +58,60 @@ impl Sortable for DashboardTableField {
 
 pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> Element<'a> {
 
-    let mut data = load_dashboard_table_rows(dashboard_data.search_query.get().to_owned());
-    dashboard_data.sorter.sort(data.as_mut_slice());
-
+    let data = load_dashboard_table_rows(dashboard_data.search_query.get().to_owned());
     let categories = load_categories_data();
 
-    cx.render(rsx!{
-        div { 
-            class: "mx-auto p-4 bg-gray-100 flex justify-center",
-            create_search_bar(cx, dashboard_data.search_query)
-            div { 
-                class: "p-2"
-            }
-            div { class: "flex items-center justify-center flex-row",
-                table {
-                    thead {
-                        tr {
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::FileName, "Name" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Pages, "Pages" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Author, "Author" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Categories, "Categories" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::AddCategory, "Add" }
-                            Th { sorter: dashboard_data.sorter, field: DashboardTableField::Open, "Open"}
-                        }
+    match ( data, categories) {
+        (LoaderResult::Ok(mut data), LoaderResult::Ok(categories)) => {
+            dashboard_data.sorter.sort(data.as_mut_slice());
+            cx.render(rsx!{
+                div { 
+                    class: "mx-auto p-4 bg-gray-100 flex justify-center",
+                    create_search_bar(cx, dashboard_data.search_query)
+                    div { 
+                        class: "p-2"
                     }
-                    tbody {
-                        for (i, table_row) in data.iter().enumerate() {
-
-                            tr {
-                                td { "{table_row.file_name}" }
-                                td { "{table_row.pages}" }
-                                td { "{table_row.author}" }
-                                td {
-                                {
-                                    let mut cats = categories.iter().map(|cat| CategoryTag { label: cat.label.to_string(), color: cat.color.to_string() }).collect::<Vec<CategoryTag>>();
-                                    cats.retain(|cat| table_row.categories.contains(&cat.label)); 
-                                    create_category_tags(cx, cats)}
+                    div { class: "flex items-center justify-center flex-row",
+                        table {
+                            thead {
+                                tr {
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::FileName, "Name" }
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::Pages, "Pages" }
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::Author, "Author" }
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::Categories, "Categories" }
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::AddCategory, "Add" }
+                                    Th { sorter: dashboard_data.sorter, field: DashboardTableField::Open, "Open"}
                                 }
-                                td {
-                                    create_button_add_category(cx, i, table_row.file_name.clone(), categories.clone(), dashboard_data)
-                                }
-                                td {
-                                    create_button_open_pdf(cx, table_row.file_name.clone())
+                            }
+                            tbody {
+                                for (i, table_row) in data.iter().enumerate() {
+        
+                                    tr {
+                                        td { "{table_row.file_name}" }
+                                        td { "{table_row.pages}" }
+                                        td { "{table_row.author}" }
+                                        td {
+                                        {
+                                            let mut cats = categories.iter().map(|cat| CategoryTag { label: cat.label.to_string(), color: cat.color.to_string() }).collect::<Vec<CategoryTag>>();
+                                            cats.retain(|cat| table_row.categories.contains(&cat.label)); 
+                                            create_category_tags(cx, cats)}
+                                        }
+                                        td {
+                                            create_button_add_category(cx, i, table_row.file_name.clone(), categories.clone(), dashboard_data)
+                                        }
+                                        td {
+                                            create_button_open_pdf(cx, table_row.file_name.clone())
+                                        }
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
-        }
-   })
+           })
+        },
+        _ => None
+    }
 }
 
 fn create_category_tags(cx: Scope, categories : Vec<CategoryTag>) -> Element {
@@ -169,26 +173,31 @@ fn create_category_option<'a>(cx: Scope<'a>, label : String, file_name: String, 
     let selected_style = "block px-4 py-2 text-sm text-green-600 bg-gray-100";
     
     let papers = load_papers();
-    let mut found = false;
-    for paper in papers.iter() {
-        if paper.file_name == file_name {
-            for cat in paper.categories.iter() {
-                if cat == &label {
-                    found = true;
+    if let LoaderResult::Ok(papers) = papers {
+        let mut found = false;
+        for paper in papers.iter() {
+            if paper.file_name == file_name {
+                for cat in paper.categories.iter() {
+                    if cat == &label {
+                        found = true;
+                        break;
+                    }
                 }
             }
         }
-    }
 
-    cx.render(rsx! {
-        a {
-            href: "#",
-            class: if found { selected_style } else { unselected_style },
-            onclick: move |_| {
-                update_categories(&file_name, &label);
-                category_hook.set("".to_string());
-            },
-            label.clone()
-        }
-    })
+        cx.render(rsx! {
+            a {
+                href: "#",
+                class: if found { selected_style } else { unselected_style },
+                onclick: move |_| {
+                    update_categories(&file_name, &label);
+                    category_hook.set("".to_string());
+                },
+                label.clone()
+            }
+        })
+    } else {
+        None
+    }
 }

@@ -71,6 +71,7 @@ fn create_global_search_bar<'a>(cx: Scope<'a>, global_search_data : GlobalSearch
 }
 
 fn search_in_all_files(query : &str) -> Vec<GlobalSearchResult> {
+    println!("{}", query); 
     let results = vec![];
 
     let all_pdfs = std::fs::read_dir("papers/").unwrap();
@@ -115,12 +116,9 @@ fn parse_members_on_page(page: &Page) {
     let operations = content.operations(&NoResolve).unwrap();
 
     for operation in operations {
-        match operation {
-            Op::TextDraw {text } => {
-                let data = text.to_string_lossy();
-                println!("{}", data);
-            }
-            _ => {}
+        if let Op::TextDraw {text } = operation {
+            let data = text.to_string_lossy();
+            println!("{}", data);
         }
     }
 

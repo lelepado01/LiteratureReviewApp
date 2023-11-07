@@ -6,19 +6,17 @@ use serde::{Deserialize, Serialize};
 use crate::categories::categories_data::CategoryTag;
 use crate::data::downloader::{download_paper_citation, DownloaderResult};
 use crate::common::create_search_bar;
-use crate::data::loader::load_pdf_export_rows;
+use crate::data::loader::{load_pdf_export_rows, LoaderResult};
 use crate::components::badges::create_category_badge;
 
 use super::export_data::ExportData;
 
-/// Our table row. Type `T`.
 #[derive(Clone, PartialEq, Serialize, Deserialize)]
 pub struct ExportPDFTableRow {
     pub file_name: String,
     pub categories: Vec<CategoryTag>,
 }
 
-/// Our table columns. Type `F`. One for each field in Person.
 #[derive(Copy, Clone, Debug, Default, PartialEq)]
 pub enum ExportPDFTableField {
     #[default]
@@ -27,10 +25,8 @@ pub enum ExportPDFTableField {
     AddRemove,
 }
 
-/// Specify how we sort our `Person` using `PersonField`.
 impl PartialOrdBy<ExportPDFTableRow> for ExportPDFTableField {
     fn partial_cmp_by(&self, a: &ExportPDFTableRow, b: &ExportPDFTableRow) -> Option<std::cmp::Ordering> {
-        // Note how it's just a passthru to `PartialOrd` for each field.
         match self {
             ExportPDFTableField::Category => Some(std::cmp::Ordering::Equal),
             ExportPDFTableField::FileName => Some(std::cmp::Ordering::Equal),
@@ -49,35 +45,40 @@ impl Sortable for ExportPDFTableField {
 
 pub fn ExportPDFTable<'a>(cx: Scope<'a>, export_data : ExportData<'a>) -> Element<'a> {
 
-    let mut data = load_pdf_export_rows(); 
-    data.retain(|row| row.file_name.to_lowercase().contains(export_data.search_query.get()));
-    export_data.sorter.sort(data.as_mut_slice());
+    let data = load_pdf_export_rows(); 
 
-    cx.render(rsx!{
-        div { 
-            class: "mx-auto p-4 bg-gray-100 flex justify-center",
-            create_search_bar(cx, export_data.search_query)
+    if let LoaderResult::Ok(mut data) = data {
+        data.retain(|row| row.file_name.to_lowercase().contains(export_data.search_query.get()));
+        export_data.sorter.sort(data.as_mut_slice());
+
+        cx.render(rsx!{
             div { 
-                class: "p-2"
-            }
-            div { class: "flex items-center justify-center flex-row",
-                table {
-                    thead {
-                        tr {
-                            Th { sorter: export_data.sorter, field: ExportPDFTableField::FileName, "File" }
-                            Th { sorter: export_data.sorter, field: ExportPDFTableField::Category, "Category" }
-                            Th { sorter: export_data.sorter, field: ExportPDFTableField::AddRemove, "" }
+                class: "mx-auto p-4 bg-gray-100 flex justify-center",
+                create_search_bar(cx, export_data.search_query)
+                div { 
+                    class: "p-2"
+                }
+                div { class: "flex items-center justify-center flex-row",
+                    table {
+                        thead {
+                            tr {
+                                Th { sorter: export_data.sorter, field: ExportPDFTableField::FileName, "File" }
+                                Th { sorter: export_data.sorter, field: ExportPDFTableField::Category, "Category" }
+                                Th { sorter: export_data.sorter, field: ExportPDFTableField::AddRemove, "" }
+                            }
                         }
-                    }
-                    tbody {
-                        for table_row in data.iter() {
-                            create_table_row(cx, table_row.clone(), export_data)
+                        tbody {
+                            for table_row in data.iter() {
+                                create_table_row(cx, table_row.clone(), export_data)
+                            }
                         }
                     }
                 }
             }
-        }
-   })
+       })
+    } else {
+        None
+    }
 }
 
 fn create_table_row<'a>(cx : Scope<'a>, table_row : ExportPDFTableRow, export_data : ExportData<'a>) -> Element<'a> {
@@ -97,9 +98,8 @@ fn create_table_row<'a>(cx : Scope<'a>, table_row : ExportPDFTableRow, export_da
                         onclick: move |_| {
                             let tr = table_row.file_name.clone();
                             let cit = download_paper_citation(tr);
-                            match cit {
-                                DownloaderResult::Ok(cit) => export_data.add_citation_data(cit), 
-                                _ => {}
+                            if let DownloaderResult::Ok(cit) = cit {
+                                export_data.add_citation_data(cit);
                             }
                         },
                         "Add"

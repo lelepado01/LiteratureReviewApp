@@ -3,14 +3,14 @@ use std::{fs::File, io::Write};
 
 use super::export_data::ExportData;
 
-use crate::scholar::scholar::ScholarArgs;
-use crate::scholar::scholar::init_client; 
+use crate::scholar::ScholarArgs;
+use crate::scholar::init_client; 
 
 pub fn export_to_bib(export_data : ExportData) {
 
     let mut data : Vec<String> = vec![]; 
-    for (i, cit) in export_data.citation_data.read().iter().enumerate() {
-        let tit = ""; //&export_data.citation_data[i].title; 
+    for cit in export_data.citation_data.read().iter() {
+        let tit = &cit.title; 
         let s = ScholarArgs {
             query: tit,
             cite_id: None,
@@ -46,5 +46,5 @@ pub fn export_to_bib(export_data : ExportData) {
 }
 
 pub fn export_to_text(export_data : ExportData){
-
+    println!("{:?}", export_data.citation_data.read()); 
 }

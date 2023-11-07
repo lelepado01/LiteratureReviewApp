@@ -4,7 +4,7 @@ use std::fmt::Debug;
 use dioxus::prelude::*;
 use serde::{Serialize, Deserialize};
 
-use crate::data::loader::load_memos;
+use crate::data::loader::{load_memos, LoaderResult};
 
 #[derive(Clone, Debug, PartialEq, Serialize, Deserialize)]
 pub struct Memo {
@@ -25,11 +25,16 @@ pub struct MemoData<'a> {
 
 impl<'a> MemoData<'a> {
     pub fn new(cx: Scope<'a>) -> Self {
+        let memos = load_memos();
         Self {
             search_query: use_state(cx, || "".to_string()),
             add_memo_modal_form_hidden: use_state(cx, || true),
             modal_form_memo: use_state(cx, || Memo { content: "".to_string(), open:false, done: false, children: vec![] }),
-            all_memos: use_ref(cx, ||{load_memos()}),
+            all_memos: use_ref(cx, ||{ 
+                match memos {
+                    LoaderResult::Ok(memos) => memos,
+                    LoaderResult::Err(_) => vec![],
+                }}),
             memo_parent: use_state(cx, || "".to_string()),
         }
     }

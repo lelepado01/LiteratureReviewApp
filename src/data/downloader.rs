@@ -5,7 +5,7 @@ use std::io::Write;
 
 use crate::data::Paper;
 use crate::export::export_data::CitationData;
-use crate::scholar::scholar::{init_client, ScholarArgs};
+use crate::scholar::{init_client, ScholarArgs};
 
 pub enum DownloaderResult<T> {
     Ok(T), 

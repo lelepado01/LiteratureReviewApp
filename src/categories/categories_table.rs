@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use crate::categories::categories_data::CategoriesData;
 use crate::components::color_picker_modal::create_color_picker_modal;
 use crate::common::create_search_bar;
-use crate::data::loader::load_categories_data;
+use crate::data::loader::{load_categories_data, LoaderResult};
 use crate::data::updater::delete_category_data;
 use crate::components::badges::create_category_badge;
 use crate::categories::categories_data::CategoryTag;
@@ -53,46 +53,50 @@ impl Sortable for CategoriesTableField {
 
 pub fn CategoriesTable<'a>(cx: Scope<'a>, categories_data : CategoriesData<'a>) -> Element<'a> {
 
-    let mut data = load_categories_data(); 
-    data.retain(|row| row.label.to_lowercase().contains(categories_data.search_query.get()));
+    let data = load_categories_data(); 
+    if let LoaderResult::Ok(mut data) = data {
+        data.retain(|row| row.label.to_lowercase().contains(categories_data.search_query.get()));
 
-    cx.render(rsx!{
-        div { 
-            class: "mx-auto p-4 bg-gray-100 flex justify-center",
-            create_search_bar(cx, categories_data.search_query)
+        cx.render(rsx!{
             div { 
-                class: "p-2"
-            }
-            div { class: "flex items-center justify-center flex-row",
-                table {
-                    thead {
-                        tr {
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::Category, "Category" }
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::Color, "Preview" }
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::ColorPicker, "Pick" }
-                            Th { sorter: categories_data.sorter, field: CategoriesTableField::DeleteCategory, "Delete" }
-                        }
-                    }
-                    tbody {
-                        for (i, table_row) in data.iter().enumerate() {
+                class: "mx-auto p-4 bg-gray-100 flex justify-center",
+                create_search_bar(cx, categories_data.search_query)
+                div { 
+                    class: "p-2"
+                }
+                div { class: "flex items-center justify-center flex-row",
+                    table {
+                        thead {
                             tr {
-                                td { "{table_row.label}" }
-                                td { 
-                                    create_category_badge(cx, CategoryTag { label: table_row.label.clone(), color: table_row.color.clone() })
-                                }
-                                td { 
-                                    create_button_color_picker(cx, i, table_row.label.clone(), categories_data)
-                                }
-                                td {
-                                    create_delete_category_button(cx, table_row.label.clone(), categories_data)
+                                Th { sorter: categories_data.sorter, field: CategoriesTableField::Category, "Category" }
+                                Th { sorter: categories_data.sorter, field: CategoriesTableField::Color, "Preview" }
+                                Th { sorter: categories_data.sorter, field: CategoriesTableField::ColorPicker, "Pick" }
+                                Th { sorter: categories_data.sorter, field: CategoriesTableField::DeleteCategory, "Delete" }
+                            }
+                        }
+                        tbody {
+                            for (i, table_row) in data.iter().enumerate() {
+                                tr {
+                                    td { "{table_row.label}" }
+                                    td { 
+                                        create_category_badge(cx, CategoryTag { label: table_row.label.clone(), color: table_row.color.clone() })
+                                    }
+                                    td { 
+                                        create_button_color_picker(cx, i, table_row.label.clone(), categories_data)
+                                    }
+                                    td {
+                                        create_delete_category_button(cx, table_row.label.clone(), categories_data)
+                                    }
                                 }
                             }
                         }
                     }
                 }
             }
-        }
-   })
+        })
+    } else {
+        None
+    } 
 }
 
 fn create_button_color_picker<'a>(cx: Scope<'a>, row : usize, category : String, mut categories_data : CategoriesData<'a>) -> Element<'a> {
