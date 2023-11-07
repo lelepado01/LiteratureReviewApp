@@ -4,7 +4,7 @@ use dioxus_sortable::{PartialOrdBy, SortBy, Sortable, Th};
 use serde::{Deserialize, Serialize};
 
 use crate::categories::categories_data::CategoryTag;
-use crate::data::downloader::download_paper_citation;
+use crate::data::downloader::{download_paper_citation, DownloaderResult};
 use crate::common::create_search_bar;
 use crate::data::loader::load_pdf_export_rows;
 use crate::components::badges::create_category_badge;
@@ -97,8 +97,10 @@ fn create_table_row<'a>(cx : Scope<'a>, table_row : ExportPDFTableRow, export_da
                         onclick: move |_| {
                             let tr = table_row.file_name.clone();
                             let cit = download_paper_citation(tr);
-                            println!("{:?}", cit); 
-                            export_data.add_citation_data(cit);
+                            match cit {
+                                DownloaderResult::Ok(cit) => export_data.add_citation_data(cit), 
+                                _ => {}
+                            }
                         },
                         "Add"
                     }

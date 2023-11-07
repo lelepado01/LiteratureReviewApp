@@ -8,8 +8,8 @@ use super::export_pdf_table::ExportPDFTableField;
 pub struct CitationData {
     pub author: String,
     pub title: String,
-    pub year: String,
-    pub publisher: String,
+    pub abstract_data: String,
+    pub link: String,
 }
 
 #[derive(Clone, Copy, PartialEq)]

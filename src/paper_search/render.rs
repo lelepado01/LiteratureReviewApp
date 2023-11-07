@@ -135,7 +135,9 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                                     "href": "#",
                                     onclick: move |_| {
                                         let paper_data = download_paper(search_result.download_link.clone(), search_result.file_name.clone(), search_result.author.clone());
-                                        add_paper_data(paper_data);
+                                        if paper_data.is_ok() {
+                                            add_paper_data(paper_data.unwrap());
+                                        }
                                     },
                                     svg {
                                         class: "w-8 h-8",
