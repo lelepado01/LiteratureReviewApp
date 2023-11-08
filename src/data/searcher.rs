@@ -24,6 +24,7 @@ pub async fn search_in_all_files_async(query : &str) -> FuturesUnordered<GlobalS
     }
 }
 
+#[allow(dead_code)]
 pub fn search_in_all_files(query : &str) -> Vec<GlobalSearchResult> {
     let mut results = vec![];
     let all_pdfs = load_papers();

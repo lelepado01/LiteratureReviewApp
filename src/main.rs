@@ -9,7 +9,7 @@ mod memos;
 mod dashboard;
 mod global_search; 
 mod paper_search;
-mod paper_content;
+mod paper_memos;
 mod components;
 mod data;
 mod export;
@@ -28,6 +28,7 @@ use memos::render::create_memos_page;
 use dashboard::render::create_dashboard_page;
 use global_search::render::create_global_search_page;
 use paper_search::render::create_paper_search_page;
+use paper_memos::render::create_paper_memos_page;
 use paper_search::paper_search_data::PaperSearchData;
 use export::render::create_export_page;
 use export::ExportTo;
@@ -60,7 +61,8 @@ fn App(cx: Scope) -> Element {
         match page.get() {
             AppPage::Dashboard => create_dashboard_page(cx, dashboard_data),
             AppPage::Categories => create_categories_page(cx, categories_data),
-            AppPage::Memos => create_memos_page(cx, memo_data),
+            AppPage::GeneralMemos => create_memos_page(cx, memo_data),
+            AppPage::PaperMemos => create_paper_memos_page(cx),
             AppPage::GlobalSearch => create_global_search_page(cx, global_search_data),
             AppPage::PaperSearch => create_paper_search_page(cx, paper_search_data),
             AppPage::ExportBib => create_export_page(cx, ExportTo::Bib, export_data),

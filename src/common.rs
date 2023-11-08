@@ -17,7 +17,8 @@ pub fn create_header<'a>(cx : Scope<'a>, page: &'a UseState<AppPage>) -> Element
                     src: match page.get() {
                         AppPage::Dashboard => "assets/dashboard_icon.png",
                         AppPage::Categories => "assets/categories_icon.png",
-                        AppPage::Memos => "assets/memos_icon.png",
+                        AppPage::GeneralMemos => "assets/memos_icon.png",
+                        AppPage::PaperMemos => "assets/paper_content_icon.png",
                         AppPage::GlobalSearch => "assets/global_search_icon.png",
                         AppPage::PaperSearch => "assets/paper_search_icon.png",
                         AppPage::ExportBib => "assets/export_icon.png",
@@ -31,7 +32,8 @@ pub fn create_header<'a>(cx : Scope<'a>, page: &'a UseState<AppPage>) -> Element
                     match page.get() {
                         AppPage::Dashboard => "Dashboard",
                         AppPage::Categories => "Categories",
-                        AppPage::Memos => "Memos",
+                        AppPage::GeneralMemos => "General Memos",
+                        AppPage::PaperMemos => "Paper Memos",
                         AppPage::GlobalSearch => "Search in all Files",
                         AppPage::PaperSearch => "Search for Paper",
                         AppPage::ExportBib => "Export as BibTex File",
@@ -50,6 +52,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
     
     let export_dropdown_hidden = use_state(cx, || true);
     let search_dropdown_hidden = use_state(cx, || true);
+    let memo_dropdown_hidden = use_state(cx, || true);
 
     cx.render(rsx! {
         nav {
@@ -77,6 +80,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     onclick: |_| { 
                                         export_dropdown_hidden.set(true);
                                         search_dropdown_hidden.set(true);
+                                        memo_dropdown_hidden.set(true);
                                         page.set(AppPage::Dashboard); 
                                     },
                                     class: if page.out() == AppPage::Dashboard { current_page_icon_class } else { other_page_icon_class },
@@ -87,6 +91,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     onclick:  |_| { 
                                         export_dropdown_hidden.set(true);
                                         search_dropdown_hidden.set(true);
+                                        memo_dropdown_hidden.set(true);
                                         page.set(AppPage::Categories); 
                                     },
                                     class: if page.out()  == AppPage::Categories { current_page_icon_class } else { other_page_icon_class },
@@ -95,20 +100,53 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                 a {
                                     href: "#",
                                     onclick: |_| { 
+                                        search_dropdown_hidden.set(true); 
                                         export_dropdown_hidden.set(true);
-                                        search_dropdown_hidden.set(true);
-                                        page.set(AppPage::Memos); 
+                                        memo_dropdown_hidden.set(!*memo_dropdown_hidden.get());
                                     },
-                                    class: if page.out() == AppPage::Memos { current_page_icon_class } else { other_page_icon_class },
-                                    "Memos"
+                                    class: if page.out() == AppPage::GeneralMemos || page.out() == AppPage::PaperMemos { current_page_icon_class } else { other_page_icon_class },
+                                    "Memos",
+                                    if !memo_dropdown_hidden.get() {
+                                        cx.render(rsx!(
+                                            div {
+                                                class: "absolute mt-2 w-56 rounded-md shadow-lg bg-white ring-1 ring-black ring-opacity-5",
+                                                div {
+                                                    class: "py-1",
+                                                    a {
+                                                        href: "#",
+                                                        class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100",
+                                                        onclick: |_| { 
+                                                            page.set(AppPage::GeneralMemos); 
+                                                            search_dropdown_hidden.set(true);
+                                                            export_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
+                                                        },
+                                                        "General", 
+                                                    },
+                                                    a {
+                                                        href: "#",
+                                                        class: "block px-4 py-2 text-sm text-gray-700 hover:bg-gray-100",
+                                                        onclick: |_| { 
+                                                            page.set(AppPage::PaperMemos); 
+                                                            search_dropdown_hidden.set(true);
+                                                            export_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
+                                                        },
+                                                        "Papers",
+                                                    },
+                                                },
+                                            }
+                                        ))
+                                    }
                                 },
                                 a {
                                     href: "#",
                                     onclick: |_| { 
                                         search_dropdown_hidden.set(!*search_dropdown_hidden.get()); 
                                         export_dropdown_hidden.set(true);
+                                        memo_dropdown_hidden.set(true);
                                     },
-                                    class: if page.out() == AppPage::GlobalSearch { current_page_icon_class } else { other_page_icon_class },
+                                    class: if page.out() == AppPage::GlobalSearch || page.out() == AppPage::PaperSearch { current_page_icon_class } else { other_page_icon_class },
                                     "Search",
                                     if !search_dropdown_hidden.get() {
                                         cx.render(rsx!(
@@ -123,6 +161,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                             page.set(AppPage::GlobalSearch); 
                                                             search_dropdown_hidden.set(true);
                                                             export_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
                                                         },
                                                         "Keywords", 
                                                     },
@@ -133,6 +172,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                             page.set(AppPage::PaperSearch); 
                                                             search_dropdown_hidden.set(true);
                                                             export_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
                                                         },
                                                         "Papers",
                                                     },
@@ -146,8 +186,9 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                     onclick: |_| { 
                                         export_dropdown_hidden.set(!*export_dropdown_hidden.get()); 
                                         search_dropdown_hidden.set(true);
+                                        memo_dropdown_hidden.set(true);
                                     },
-                                    class: if page.out() == AppPage::ExportBib { current_page_icon_class } else { other_page_icon_class },
+                                    class: if page.out() == AppPage::ExportBib || page.out() == AppPage::ExportText { current_page_icon_class } else { other_page_icon_class },
                                     "Export",
                                     if !export_dropdown_hidden.get() {
                                         cx.render(rsx!(
@@ -162,6 +203,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                             page.set(AppPage::ExportBib); 
                                                             export_dropdown_hidden.set(true);
                                                             search_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
                                                         },
                                                         "Export as BibTex", 
                                                     },
@@ -172,6 +214,7 @@ pub fn create_navbar<'a>(cx : Scope<'a>, page : &'a UseState<AppPage>) -> Elemen
                                                             page.set(AppPage::ExportText); 
                                                             export_dropdown_hidden.set(true);
                                                             search_dropdown_hidden.set(true);
+                                                            memo_dropdown_hidden.set(true);
                                                         },
                                                         "Export as Text",
                                                     },

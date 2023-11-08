@@ -3,7 +3,8 @@
 pub enum AppPage {
     Dashboard, 
     Categories,
-    Memos,
+    GeneralMemos,
+    PaperMemos,
     GlobalSearch,
     PaperSearch, 
     ExportBib,
