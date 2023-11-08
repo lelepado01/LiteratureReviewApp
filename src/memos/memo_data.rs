@@ -67,7 +67,6 @@ impl<'a> MemoData<'a> {
     }
 
     pub fn check_memo(&self, memo_content : String){
-
         self.all_memos.with_mut(|memos| {
             for memo in memos.iter_mut() {
                 if memo.content == memo_content {
@@ -117,11 +116,20 @@ impl Memo {
         for memo in self.children.iter_mut() {
             if memo.content == memo_content {
                 memo.done = !memo.done;
+            } else {
+                memo.check_memo(memo_content.clone());
             }
         }
     }   
 
     pub fn remove_memo(&mut self, memo_content : String) {
-        self.children.retain(|memo| memo.content != memo_content);
+        for memo in self.children.iter_mut() {
+            if memo.content == memo_content {
+                self.children.retain(|memo| memo.content != memo_content);
+                return;
+            } else {
+                memo.remove_memo(memo_content.clone());
+            }
+        }
     }
 }
