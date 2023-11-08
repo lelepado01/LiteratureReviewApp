@@ -1,12 +1,11 @@
 
 use dioxus::prelude::*;
 
-use crate::data::searcher::search_in_all_files;
+use crate::data::searcher::search_in_all_files_async;
 use crate::components::buttons::create_button_open_pdf;
 use crate::components::padding::create_padding_block;
 
 use super::{global_search_data::GlobalSearchData, global_search_results::GlobalSearchResult};
-
 
 pub fn create_global_search_page<'a>(cx: Scope<'a>, global_search_data : GlobalSearchData<'a>) -> Element<'a> {
 
@@ -58,8 +57,15 @@ fn create_global_search_bar<'a>(cx: Scope<'a>, global_search_data : GlobalSearch
                     class: "text-white absolute right-2.5 bottom-2.5 bg-blue-700 hover:bg-blue-800 focus:ring-4 focus:outline-none focus:ring-blue-300 font-medium rounded-lg text-sm px-4 py-2 dark:bg-blue-600 dark:hover:bg-blue-700 dark:focus:ring-blue-800",
                     onclick: move |_| {
                         let query = global_search_data.search_query.get();
-                        let results = search_in_all_files(query);
-                        global_search_data.search_results.set(results);
+                        let results = search_in_all_files_async(query);
+                        
+                        pollster::block_on(async {
+                            for result in results.await {
+                                global_search_data.search_results.with_mut(|results| {
+                                    results.push(result);
+                                });
+                            }
+                        });
                     },
                     "Search"
                 }
@@ -82,12 +88,12 @@ fn create_search_result<'a>(cx : Scope<'a>, result : &'a GlobalSearchResult) -> 
                     }
                     create_padding_block(cx)
                     p {
-                        class: "mt-1 max-w-2xl text-sm text-gray-500",
+                        class: "text-sm font-bold text-gray-800",
                         result.file_content.clone()
                     }
                     create_padding_block(cx)
                     div {
-                        class: "flex justify-end",
+                        class: "flex flex-row w-full justify-end items-end px-2",
                         create_button_open_pdf(cx, result.file_name.clone())
                     }
                 }
