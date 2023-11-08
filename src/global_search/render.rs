@@ -1,8 +1,7 @@
 
-#![allow(non_snake_case)]
 use dioxus::prelude::*;
-use pdf::{file::FileOptions, object::{Page, NoResolve}, content::Op};
 
+use crate::data::searcher::search_in_all_files;
 use crate::components::buttons::create_button_open_pdf;
 use crate::components::padding::create_padding_block;
 
@@ -22,7 +21,6 @@ pub fn create_global_search_page<'a>(cx: Scope<'a>, global_search_data : GlobalS
         }
     ))
 }
-
 
 fn create_global_search_bar<'a>(cx: Scope<'a>, global_search_data : GlobalSearchData<'a>) -> Element<'a> {
     cx.render(rsx!(
@@ -70,60 +68,6 @@ fn create_global_search_bar<'a>(cx: Scope<'a>, global_search_data : GlobalSearch
     ))
 }
 
-fn search_in_all_files(query : &str) -> Vec<GlobalSearchResult> {
-    println!("{}", query); 
-    let results = vec![];
-
-    let all_pdfs = std::fs::read_dir("papers/").unwrap();
-
-    for pdf in all_pdfs {
-        let pdf_path = pdf.unwrap().path().to_str().unwrap().to_string();
-
-        let file = FileOptions::cached().open(&pdf_path).unwrap();
-
-        if let Some(ref info) = file.trailer.info_dict {
-            // let title: Option<Result<String, pdf::PdfError>> = info.get("title").as_ref().map(|p| p.to_string_lossy());
-            let author = info.get("/Creator").as_ref().map(|p| p.to_string_lossy());
-            let mod_date = info.get("/ModDate").as_ref().map(|p| p.to_string_lossy());
-
-            if author.is_some(){
-                println!("{}", author.unwrap().unwrap());
-            } 
-
-            if mod_date.is_some(){
-                println!("{}", mod_date.unwrap().unwrap());
-            }
-
-            for page in file.pages().flatten() {
-                parse_members_on_page(&page);
-            }
-
-        }
-        
-    }
-    results
-}
-
-fn parse_members_on_page(page: &Page) {
-    let content = match &page.contents {
-        Some(c) => c,
-        None => return,
-    };
-
-    if content.operations(&NoResolve).is_err() {    
-        return;
-    }
-    let operations = content.operations(&NoResolve).unwrap();
-
-    for operation in operations {
-        if let Op::TextDraw {text } = operation {
-            let data = text.to_string_lossy();
-            println!("{}", data);
-        }
-    }
-
-}
-
 fn create_search_result<'a>(cx : Scope<'a>, result : &'a GlobalSearchResult) -> Element<'a> {
     cx.render(rsx!(
         div {
@@ -142,7 +86,10 @@ fn create_search_result<'a>(cx : Scope<'a>, result : &'a GlobalSearchResult) -> 
                         result.file_content.clone()
                     }
                     create_padding_block(cx)
-                    create_button_open_pdf(cx, result.file_name.clone())
+                    div {
+                        class: "flex justify-end",
+                        create_button_open_pdf(cx, result.file_name.clone())
+                    }
                 }
             }
         }

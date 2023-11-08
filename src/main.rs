@@ -9,6 +9,7 @@ mod memos;
 mod dashboard;
 mod global_search; 
 mod paper_search;
+mod paper_content;
 mod components;
 mod data;
 mod export;

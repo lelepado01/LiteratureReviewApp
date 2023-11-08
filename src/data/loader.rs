@@ -5,33 +5,17 @@ use crate::dashboard::dashboard_table::DashboardTableRow;
 use crate::memos::memo_data::Memo;
 use crate::data::Paper;
 
-
 pub enum LoaderResult<T> {
     Ok(T), 
     Err(LoaderError), 
 }
-
-// impl<T> LoaderResult<T> {
-//     pub fn is_ok(&self) -> bool {
-//         match self {
-//             LoaderResult::Ok(_) => true,
-//             LoaderResult::Err(_) => false,
-//         }
-//     }
-
-//     pub fn unwrap(self) -> T {
-//         match self {
-//             LoaderResult::Ok(t) => t,
-//             LoaderResult::Err(e) => panic!("called `LoaderResult::unwrap()` on an `Err` value: {:?}", e),
-//         }
-//     }
-// }
 
 #[derive(Debug)]
 pub enum LoaderError {
     FileOpen,
     RonParse,
     DataElaboration,
+    PdfExtract,
 }
 
 pub fn load_papers() -> LoaderResult<Vec<Paper>> {
@@ -204,5 +188,19 @@ pub fn load_pdf_export_rows() -> LoaderResult<Vec<ExportPDFTableRow>> {
         _ => {
             LoaderResult::Err(LoaderError::DataElaboration)
         }
+    }
+}
+
+pub fn load_pdf_content(file_name : &str) -> LoaderResult<String> {
+    let bytes = std::fs::read("papers/".to_owned() + file_name); 
+    if let Ok(bytes) = bytes  {
+        let extracted = pdf_extract::extract_text_from_mem(&bytes); 
+        if let Ok(extracted) = extracted {
+            LoaderResult::Ok(extracted)
+        } else {
+            LoaderResult::Err(LoaderError::PdfExtract)
+        }
+    } else {
+        LoaderResult::Err(LoaderError::FileOpen)
     }
 }

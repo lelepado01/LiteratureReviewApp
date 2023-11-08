@@ -2,6 +2,7 @@
 pub mod loader; 
 pub mod updater;
 pub mod downloader;
+pub mod searcher;
 mod file_helper;
 
 use serde::{Serialize, Deserialize};
