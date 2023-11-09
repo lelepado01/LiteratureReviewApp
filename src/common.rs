@@ -18,7 +18,7 @@ pub fn create_header<'a>(cx : Scope<'a>, page: &'a UseState<AppPage>) -> Element
                         AppPage::Dashboard => "assets/dashboard_icon.png",
                         AppPage::Categories => "assets/categories_icon.png",
                         AppPage::GeneralMemos => "assets/memos_icon.png",
-                        AppPage::PaperMemos => "assets/paper_content_icon.png",
+                        AppPage::PaperMemos => "assets/paper_memos_icon.png",
                         AppPage::GlobalSearch => "assets/global_search_icon.png",
                         AppPage::PaperSearch => "assets/paper_search_icon.png",
                         AppPage::ExportBib => "assets/export_icon.png",
