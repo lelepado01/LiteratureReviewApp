@@ -1,7 +1,7 @@
 
 use crate::categories::categories_data::CategoryTag;
 use crate::data::Paper;
-use crate::memos::memo_data::Memo;
+use crate::general_memos::general_memo_data::Memo;
 
 pub fn to_categories_file(data : &Vec<CategoryTag>) {
     let mut file = std::fs::File::create("metadata/categories.ron").unwrap();

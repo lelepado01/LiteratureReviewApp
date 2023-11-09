@@ -2,8 +2,40 @@ use crate::categories::categories_data::CategoryTag;
 use crate::categories::categories_table::CategoriesTableRow;
 use crate::export::export_pdf_table::ExportPDFTableRow;
 use crate::dashboard::dashboard_table::DashboardTableRow;
-use crate::memos::memo_data::Memo;
+use crate::general_memos::general_memo_data::Memo;
 use crate::data::Paper;
+use crate::paper_memos::paper_memo_data::PaperMemo;
+
+use dioxus::prelude::GlobalAttributes;
+use lopdf::{Document, Object};
+
+static IGNORE: &[&str] = &[
+    "Length",
+    "BBox",
+    "FormType",
+    "Matrix",
+    "Resources",
+    "Type",
+    "XObject",
+    "Subtype",
+    "Filter",
+    "ColorSpace",
+    "Width",
+    "Height",
+    "BitsPerComponent",
+    "Length1",
+    "Length2",
+    "Length3",
+    "PTEX.FileName",
+    "PTEX.PageNumber",
+    "PTEX.InfoDict",
+    "FontDescriptor",
+    "ExtGState",
+    "Font",
+    "MediaBox",
+    "Annot",
+];
+
 
 pub enum LoaderResult<T> {
     Ok(T), 
@@ -112,7 +144,7 @@ pub fn load_categories_data() -> LoaderResult<Vec<CategoryTag>> {
     }
 }
 
-pub fn load_dashboard_table_rows(name :String) -> LoaderResult<Vec<DashboardTableRow>> {
+pub fn load_dashboard_table_rows(name : &str) -> LoaderResult<Vec<DashboardTableRow>> {
     
     let papers = std::fs::read_dir("./papers/").unwrap()
         .map(|res| res.map(|e| e.path()))
@@ -138,9 +170,9 @@ pub fn load_dashboard_table_rows(name :String) -> LoaderResult<Vec<DashboardTabl
                 }
 
                 if name.is_empty() 
-                    || file_name.to_lowercase().contains(&name) 
-                    || author.to_lowercase().contains(&name)
-                    || categories.iter().any(|cat| cat.to_lowercase().contains(&name))
+                    || file_name.to_lowercase().contains(name) 
+                    || author.to_lowercase().contains(name)
+                    || categories.iter().any(|cat| cat.to_lowercase().contains(name))
                     {
                     result.push(DashboardTableRow {
                         file_name,
@@ -191,16 +223,80 @@ pub fn load_pdf_export_rows() -> LoaderResult<Vec<ExportPDFTableRow>> {
     }
 }
 
+fn filter_func(object_id: (u32, u16), object: &mut Object) -> Option<((u32, u16), Object)> {
+    if IGNORE.contains(&object.type_name().unwrap_or_default()) {
+        return None;
+    }
+    if let Ok(d) = object.as_dict_mut() {
+        d.remove(b"Font");
+        d.remove(b"Resources");
+        d.remove(b"Producer");
+        d.remove(b"ModDate");
+        d.remove(b"Creator");
+        d.remove(b"ProcSet");
+        d.remove(b"XObject");
+        d.remove(b"MediaBox");
+        d.remove(b"Annots");
+        if d.is_empty() {
+            return None;
+        }
+    }
+    Some((object_id, object.to_owned()))
+}
+
 pub fn load_pdf_content(file_name : &str) -> LoaderResult<String> {
-    let bytes = std::fs::read("papers/".to_owned() + file_name); 
-    if let Ok(bytes) = bytes  {
-        let extracted = pdf_extract::extract_text_from_mem(&bytes); 
-        if let Ok(extracted) = extracted {
-            LoaderResult::Ok(extracted)
-        } else {
+    let doc = Document::load_filtered("papers/".to_owned() + file_name, filter_func); 
+
+    match doc {
+        Ok(doc) => {
+            let mut content = String::new();
+            for (page_num, _) in doc.get_pages() {
+                let mut content_stream = String::new();
+                if let Ok(content_object) = doc.extract_text(&[page_num]) {
+                    content_stream.push_str(&content_object); 
+                    content_stream.push('\n'); 
+                }
+                content.push_str(&content_stream);
+            }
+            LoaderResult::Ok(content)
+        },
+        Err(_) => {
             LoaderResult::Err(LoaderError::PdfExtract)
+        }
+    }
+
+}
+
+pub fn load_pdf_details(file_name : &str) -> LoaderResult<String> {
+    let doc = Document::load_filtered("papers/".to_owned() + file_name, filter_func); 
+
+    match doc {
+        Ok(doc) => {
+            for (_, page_id) in doc.get_pages() {
+                let anns = doc.get_page_annotations(page_id);
+                println!("{:?}", anns);
+            }
+            LoaderResult::Err(LoaderError::PdfExtract)
+        },
+        Err(_) => {
+            LoaderResult::Err(LoaderError::PdfExtract)
+        }
+    }
+}
+ 
+pub fn load_paper_memos(query : &str) -> LoaderResult<Vec<PaperMemo>> {
+
+    let file = std::fs::File::open("metadata/paper_memos.ron"); 
+    if let Ok(file) = file {
+        let memos: Result<Vec<PaperMemo>, ron::error::SpannedError> = ron::de::from_reader(file); 
+        if let Ok(mut memos) = memos {
+            memos.retain(|memo| memo.paper_name.to_lowercase().contains(query)); 
+            LoaderResult::Ok(memos)
+        } else {
+            LoaderResult::Err(LoaderError::RonParse)
         }
     } else {
         LoaderResult::Err(LoaderError::FileOpen)
     }
+
 }

@@ -85,11 +85,11 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
             div {
                 class: "px-4 py-5 sm:p-6 flex flex-col justify-between w-2xl max-w-2xl",
                 h3 {
-                    class: "text-lg leading-6 font-medium text-gray-900 dark:text-white overflow-hidden overflow-ellipsis",
+                    class: "text-lg leading-6 font-medium text-gray-900 dark:text-white overflow-hidden overflow-ellipsis whitespace-nowrap",
                     search_result.file_name.clone()
                 }
                 p {
-                    class: "mt-1 max-w-1l text-sm text-gray-500 dark:text-gray-400 overflow-hidden overflow-ellipsis",
+                    class: "mt-1 max-w-1l text-sm text-gray-500 dark:text-gray-400 overflow-hidden overflow-ellipsis whitespace-nowrap",
                     search_result.file_content.clone()
                 }
             }
@@ -122,9 +122,9 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                     }
                 }
             }
-            create_padding_block(cx)
+            create_padding_block(cx),
             div{
-                class: "flex flex-row justify-end items-center",
+                class: "flex flex-1 flex-row justify-end items-end",
                 if search_result.download_link.ends_with(".pdf") {
                     cx.render(rsx!(
                         div {
@@ -164,13 +164,25 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                     class: "sm:col-span-2",
                     div{
                         a {
-                            class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                            class: "w-full flex items-center justify-center p-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
                             "href": "#",
                             onclick: move |_| {
                                 abstract_data.set(search_abstract(search_result.page_link.clone()));
                                 abstract_modal_hidden.set(false);
                             },
-                            "Open Abstract",
+                            svg{
+                                class: "w-8 h-8",
+                                "xmlns": "http://www.w3.org/2000/svg",
+                                "fill": "none",
+                                "viewBox": "0 0 24 24",
+                                "stroke-width": "1",
+                                "stroke": "currentColor",
+                                path {
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    d: "M12 7.5h1.5m-1.5 3h1.5m-7.5 3h7.5m-7.5 3h7.5m3-9h3.375c.621 0 1.125.504 1.125 1.125V18a2.25 2.25 0 01-2.25 2.25M16.5 7.5V18a2.25 2.25 0 002.25 2.25M16.5 7.5V4.875c0-.621-.504-1.125-1.125-1.125H4.125C3.504 3.75 3 4.254 3 4.875V18a2.25 2.25 0 002.25 2.25h13.5M6 7.5h3v3H6v-3z"
+                                }
+                            }
                         }
                     }
                 }
@@ -179,13 +191,26 @@ fn create_paper_search_result<'a>(cx : Scope<'a>, search_result: &'a PaperSearch
                     class: "sm:col-span-2",
                     div{
                         a {
-                            class: "w-full flex items-center justify-center px-4 py-2 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
+                            class: "w-full flex items-center justify-center p-3 border border-transparent rounded-md shadow-sm text-sm font-medium text-white bg-blue-700 hover:bg-blue-800 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500",
                             "href": search_result.page_link.as_str(),
                             "target": "_blank",
-                            "Open Link"
+                            svg{
+                                class: "w-8 h-8",
+                                "xmlns": "http://www.w3.org/2000/svg",
+                                "fill": "none",
+                                "viewBox": "0 0 24 24",
+                                "stroke-width": "1",
+                                "stroke": "currentColor",
+                                path {
+                                    "stroke-linecap": "round",
+                                    "stroke-linejoin": "round",
+                                    d: "M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
+                                }
+                            }
                         }
                     }
                 }
+                create_padding_block(cx),
             }
         }
     ))

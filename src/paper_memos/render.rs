@@ -1,10 +1,10 @@
 use dioxus::prelude::*;
 
-pub fn create_paper_memos_page(cx : Scope) -> Element {
+use crate::paper_memos::paper_memo_data::PaperMemoData;
+use crate::paper_memos::paper_memo_table::PaperMemoTable;
+
+pub fn create_paper_memos_page<'a>(cx : Scope<'a>, papermemo_data : PaperMemoData<'a>) -> Element<'a> {
     cx.render(rsx! {
-        div{
-            h1 { "Paper Content" }
-            p { "This is the paper content page"}
-        }
+        PaperMemoTable(cx, papermemo_data)
     })
 }

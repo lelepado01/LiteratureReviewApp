@@ -83,17 +83,17 @@ fn create_search_result<'a>(cx : Scope<'a>, result : &'a GlobalSearchResult) -> 
                 div {
                     class: "px-3 py-5 sm:px-6 flex items-center",
                     h3 {
-                        class: "text-lg leading-6 font-medium text-gray-900",
+                        class: "text-lg leading-6 font-medium text-gray-900 overflow-ellipsis overflow-hidden",
                         result.file_name.clone()
-                    }
-                    create_padding_block(cx)
-                    p {
-                        class: "text-sm font-bold text-gray-800",
-                        result.file_content.clone()
                     }
                     create_padding_block(cx)
                     div {
                         class: "flex flex-row w-full justify-end items-end px-2",
+                        p {
+                            class: "text-sm text-gray-600 w-lg max-w-lg overflow-ellipsis overflow-hidden",
+                            result.file_content.clone()
+                        }
+                        create_padding_block(cx),
                         create_button_open_pdf(cx, result.file_name.clone())
                     }
                 }

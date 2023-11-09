@@ -58,7 +58,7 @@ impl Sortable for DashboardTableField {
 
 pub fn DashboardTable<'a>(cx: Scope<'a>, dashboard_data : DashboardData<'a>) -> Element<'a> {
 
-    let data = load_dashboard_table_rows(dashboard_data.search_query.get().to_owned());
+    let data = load_dashboard_table_rows(dashboard_data.search_query.get());
     let categories = load_categories_data();
 
     match ( data, categories) {

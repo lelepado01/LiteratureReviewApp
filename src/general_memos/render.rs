@@ -3,7 +3,7 @@ use dioxus::prelude::*;
 
 use crate::data::updater::update_memo_data;
 
-use super::memo_data::{MemoData, Memo};
+use super::general_memo_data::{MemoData, Memo};
 
 pub fn create_memos_page<'a>(cx: Scope<'a>, memo_data : MemoData<'a>) -> Element<'a> {
 

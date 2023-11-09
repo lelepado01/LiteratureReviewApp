@@ -1,6 +1,6 @@
 
 
-use crate::{data::loader::load_papers, categories::categories_data::CategoryTag, memos::memo_data::Memo};
+use crate::{data::loader::load_papers, categories::categories_data::CategoryTag, general_memos::general_memo_data::Memo};
 use super::{loader::{load_categories_data, LoaderResult, load_paper_files}, file_helper::{to_papers_file, to_categories_file, to_memos_file}};
 use crate::data::Paper;
 
